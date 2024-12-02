@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: '2024-11-22'
+Transform: AWS::Serverless-2024-11-22
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: com.example.LambdaHandler::handleRequest
+      Runtime: java17
+      CodeUri: ./build/libs/demo-0.0.1-SNAPSHOT-all.jar
+      MemorySize: 512
+      Timeout: 30
+      Policies: AWSLambdaBasicExecutionRole
