@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-public class testController {
+public class TestController {
     @GetMapping("/test")
     public String test(Model model) {
         model.addAttribute("data", "test~~!!");

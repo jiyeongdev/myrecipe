@@ -1,9 +1,9 @@
 package com.sdemo1.repository;
 
-import com.sdemo1.domain.Member;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import com.sdemo1.entity.Member;
 
 import java.util.List;
 

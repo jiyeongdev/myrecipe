@@ -1,8 +1,10 @@
 package com.sdemo1.repository;
 
-import com.sdemo1.domain.FoodItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import com.sdemo1.entity.FoodItem;
+
 import java.util.List;
 
 @Repository

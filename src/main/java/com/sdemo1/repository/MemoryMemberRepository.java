@@ -1,8 +1,8 @@
 package com.sdemo1.repository;
 
-import com.sdemo1.domain.Member;
-
 import java.util.*;
+
+import com.sdemo1.entity.Member;
 
 public class MemoryMemberRepository implements MemberRepository{
 

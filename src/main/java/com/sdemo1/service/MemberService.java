@@ -1,6 +1,6 @@
 package com.sdemo1.service;
 
-import com.sdemo1.domain.Member;
+import com.sdemo1.entity.Member;
 import com.sdemo1.repository.MemberRepository;
 import com.sdemo1.repository.MemoryMemberRepository;
 

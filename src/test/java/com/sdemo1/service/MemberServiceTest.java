@@ -1,10 +1,10 @@
 package com.sdemo1.service;
 
-import com.sdemo1.domain.Member;
-
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import com.sdemo1.entity.Member;
+
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;

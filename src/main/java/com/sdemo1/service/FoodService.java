@@ -1,12 +1,12 @@
 package com.sdemo1.service;
 
-import com.sdemo1.domain.FoodCategoryDto;
-import com.sdemo1.domain.PageRequestDTO;
-import com.sdemo1.domain.FoodItem;
+import com.sdemo1.dto.FoodCategoryDto;
+import com.sdemo1.dto.PageRequestDTO;
+import com.sdemo1.entity.FoodItem;
 import com.sdemo1.repository.FoodQueryDSLRepository;
 import com.sdemo1.repository.FoodRepository;
+import com.sdemo1.exception.CustomException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,31 +30,31 @@ public class FoodService {
         return foodRepository.getByParentID(parentID);
     }
 
-
     public List<FoodItem> findFoodCategory() {
         return foodQueryDSLRepository.findFoodCategory();
     }
 
-    public ResponseEntity<?> findIngredientByID(Map<String, String> CIDs) {
+    public List<FoodItem> findIngredientByID(Map<String, String> CIDs) {
         return foodQueryDSLRepository.findIngredientByID(CIDs);
     }
 
-    public ResponseEntity<?> allIngredient(Integer lastID, int size) {
-        return null;
+    public List<FoodItem> allIngredient(Integer lastID, int size) {
+        // Implement the logic here
+        return null; // Return the actual result instead of null
     }
 
-    public ResponseEntity<?> findIngredientByFilter(Map<String, String> params) {
+    public List<FoodItem> findIngredientByFilter(Map<String, String> params) {
         FoodCategoryDto filter = FoodCategoryDto.from(params);
         PageRequestDTO pageRequest = PageRequestDTO.getDefault();
 
         if (isNullOrEmpty(filter.getSID()) && isNullOrEmpty(filter.getMID())) {
-            return ResponseEntity.ok(findAllIngredients(pageRequest));
+            return findAllIngredients(pageRequest);
         } else if (isNullOrEmpty(filter.getSID())) {
-            return ResponseEntity.ok(findIngredientsByMainCategory(filter.getMID()));
+            return findIngredientsByMainCategory(filter.getMID());
         } else if (isNullOrEmpty(filter.getMID())) {
-            throw new IllegalArgumentException("잘못된 요청입니다 (메인x,서브o)");
+            throw new CustomException("잘못된 요청입니다 (메인x,서브o)");
         } else {
-            return ResponseEntity.ok(findIngredientsBySubCategory(filter.getSID()));
+            return findIngredientsBySubCategory(filter.getSID());
         }
     }
 

@@ -2,16 +2,16 @@ package com.sdemo1.repository;
 
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.sdemo1.entity.FoodItem;
 import com.querydsl.jpa.JPAExpressions;
-import com.sdemo1.domain.FoodItem;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
 
 import static com.sdemo1.common.utils.ValidateUtils.isNullOrEmpty;
-import static com.sdemo1.domain.QFoodItem.foodItem;
+import static com.sdemo1.entity.QFoodItem.foodItem;
 
 @Repository
 public class FoodQueryDSLRepository {
@@ -33,7 +33,7 @@ public class FoodQueryDSLRepository {
                 ).fetch();
     }
 
-    public ResponseEntity<?> findIngredientByID(Map<String, String> cIDs) {
+    public List<FoodItem> findIngredientByID(Map<String, String> cIDs) {
         JPAQuery<FoodItem> query = queryFactory.selectFrom(foodItem);
 
         String mID = cIDs.get("mID");
@@ -51,9 +51,9 @@ public class FoodQueryDSLRepository {
                             .where(foodItem.parentID.eq(mID))
             ));
         } else { // mID, sID 키 자체가 존재하지 않으면 전체 음식 요청
-            return ResponseEntity.badRequest().body("mID와 sID 키 자체가 존재하지 않습니다.");
+            throw new IllegalArgumentException("mID와 sID 키 자체가 존재하지 않습니다.");
         }
 
-        return ResponseEntity.ok(query.fetch());
+        return query.fetch();
     }
 }
