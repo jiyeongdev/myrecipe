@@ -1,16 +1,18 @@
 package com.sdemo1.repository;
 
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.sdemo1.entity.FoodItem;
-import com.querydsl.jpa.JPAExpressions;
-
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
+
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import static com.sdemo1.common.utils.ValidateUtils.isNullOrEmpty;
+import com.sdemo1.entity.FoodItem;
 import static com.sdemo1.entity.QFoodItem.foodItem;
 
 @Repository
@@ -33,6 +35,7 @@ public class FoodQueryDSLRepository {
                 ).fetch();
     }
 
+    //이제 필요없어진 듯
     public List<FoodItem> findIngredientByID(Map<String, String> cIDs) {
         JPAQuery<FoodItem> query = queryFactory.selectFrom(foodItem);
 
@@ -55,5 +58,33 @@ public class FoodQueryDSLRepository {
         }
 
         return query.fetch();
+    }
+
+    // 메인 카테고리에 대한 페이징 처리된 조회 메소드 추가
+    public Page<FoodItem> findByMainCategoryWithPaging(String mainCategoryId, Pageable pageable) {
+        var content = queryFactory
+            .selectFrom(foodItem)
+            .where(foodItem.parentID.in(
+                JPAExpressions
+                    .select(foodItem.foodID.stringValue())
+                    .from(foodItem)
+                    .where(foodItem.parentID.eq(mainCategoryId))
+            ))
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+
+        var count = queryFactory
+            .select(foodItem.count())
+            .from(foodItem)
+            .where(foodItem.parentID.in(
+                JPAExpressions
+                    .select(foodItem.foodID.stringValue())
+                    .from(foodItem)
+                    .where(foodItem.parentID.eq(mainCategoryId))
+            ))
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, count);
     }
 }

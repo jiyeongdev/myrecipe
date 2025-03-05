@@ -1,19 +1,20 @@
 package com.sdemo1.service;
 
-import com.sdemo1.dto.FoodCategoryDto;
-import com.sdemo1.dto.PageRequestDTO;
-import com.sdemo1.entity.FoodItem;
-import com.sdemo1.repository.FoodQueryDSLRepository;
-import com.sdemo1.repository.FoodRepository;
-import com.sdemo1.exception.CustomException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
 
-import static com.sdemo1.common.utils.ValidateUtils.isNullOrEmpty;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
+import static com.sdemo1.common.utils.ValidateUtils.isNullOrEmpty;
+import com.sdemo1.dto.FoodCategoryDto;
+import com.sdemo1.dto.PageRequestDto;
+import com.sdemo1.entity.FoodItem;
+import com.sdemo1.exception.CustomException;
+import com.sdemo1.repository.FoodQueryDSLRepository;
+import com.sdemo1.repository.FoodRepository;
 @Service
 public class FoodService {
 
@@ -34,6 +35,7 @@ public class FoodService {
         return foodQueryDSLRepository.findFoodCategory();
     }
 
+    
     public List<FoodItem> findIngredientByID(Map<String, String> CIDs) {
         return foodQueryDSLRepository.findIngredientByID(CIDs);
     }
@@ -43,30 +45,40 @@ public class FoodService {
         return null; // Return the actual result instead of null
     }
 
-    public List<FoodItem> findIngredientByFilter(Map<String, String> params) {
-        FoodCategoryDto filter = FoodCategoryDto.from(params);
-        PageRequestDTO pageRequest = PageRequestDTO.getDefault();
+    public Page<FoodItem> findIngredientByFilter(FoodCategoryDto params) {
 
-        if (isNullOrEmpty(filter.getSID()) && isNullOrEmpty(filter.getMID())) {
-            return findAllIngredients(pageRequest);
-        } else if (isNullOrEmpty(filter.getSID())) {
-            return findIngredientsByMainCategory(filter.getMID());
-        } else if (isNullOrEmpty(filter.getMID())) {
+        PageRequestDto getpages = params.getPageRequest();
+        System.out.println("---------------------------------@@@");
+        System.out.println("getpages : " + getpages);
+        System.out.println("---------------------------------@@@");
+        Pageable pageable = getpages.toPageable();
+        System.out.println("---------------------------------@@@");
+        System.out.println("pageable : " + pageable);
+        System.out.println("---------------------------------@@@");
+        
+        if (isNullOrEmpty(params.getSID()) && isNullOrEmpty(params.getMID())) {
+            return findAllIngredients(params);
+        } else if (isNullOrEmpty(params.getSID())) {
+            return findIngredientsByMainCategory(params);
+        } else if (isNullOrEmpty(params.getMID())) {
             throw new CustomException("잘못된 요청입니다 (메인x,서브o)");
         } else {
-            return findIngredientsBySubCategory(filter.getSID());
+            return findIngredientsBySubCategory(params);
         }
     }
 
-    private List<FoodItem> findAllIngredients(PageRequestDTO pageRequest) {
-        return foodRepository.findAll(pageRequest.toPageable()).getContent();
+    private Page<FoodItem> findIngredientsByMainCategory(FoodCategoryDto params) {
+        return foodQueryDSLRepository.findByMainCategoryWithPaging(
+            params.getMID(), 
+            params.getPageRequest().toPageable()
+        );
     }
 
-    private List<FoodItem> findIngredientsByMainCategory(String mainCategoryId) {
-        return foodRepository.getByParentID(mainCategoryId);
+    private Page<FoodItem> findIngredientsBySubCategory(FoodCategoryDto params) { //ok
+        return foodRepository.findByParentID(params.getSID(), params.getPageRequest().toPageable());
     }
 
-    private List<FoodItem> findIngredientsBySubCategory(String subCategoryId) {
-        return foodRepository.getAllByParentIDEquals(subCategoryId);
+    private Page<FoodItem> findAllIngredients(FoodCategoryDto params) {
+        return foodRepository.findAll(params.getPageRequest().toPageable());
     }
 }

@@ -87,10 +87,14 @@ dependencies {
     annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+    //터미널에서 SQL 로그에 노란색 하이라이트가 적용하기
+    implementation 'org.fusesource.jansi:jansi:1.18'
 }
 
-
-
+compileJava {
+    options.compilerArgs << '-parameters'
+}
 
 tasks.named('test') {
     useJUnitPlatform()

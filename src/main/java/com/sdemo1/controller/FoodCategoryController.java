@@ -1,17 +1,26 @@
 package com.sdemo1.controller;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.sdemo1.common.response.ApiResponse;
+import com.sdemo1.common.utils.ValidateUtils;
+import com.sdemo1.dto.FoodCategoryDto;
 import com.sdemo1.dto.FoodCategoryResponse;
+import com.sdemo1.dto.PageRequestDto;
 import com.sdemo1.entity.FoodItem;
 import com.sdemo1.exception.CustomException;
 import com.sdemo1.service.FoodService;
-import com.sdemo1.common.utils.ValidateUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/food")
@@ -73,7 +82,12 @@ public class FoodCategoryController {
 
     // 재료선택 화면 API
     @GetMapping("/findIngredientByFilter")
-    public ApiResponse<?> findIngredientByFilter(@RequestParam Map<String, String> params){
+    public ApiResponse<?> findIngredientByFilter(
+            @ModelAttribute FoodCategoryDto params,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size) {
+        
+        params.setPageRequest(new PageRequestDto(page, size));
         return new ApiResponse<>(true, "성공", foodService.findIngredientByFilter(params), HttpStatus.OK);
     }
 

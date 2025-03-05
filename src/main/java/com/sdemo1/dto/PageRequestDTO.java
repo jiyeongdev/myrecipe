@@ -2,20 +2,23 @@ package com.sdemo1.dto;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
-public class PageRequestDTO {
-    private int page; // 페이지 번호
-    private int size; // 페이지 크기
+public class PageRequestDto{
+    private int page;
+    private int size;
 
-    public static PageRequestDTO getDefault() {
-        PageRequestDTO dto = new PageRequestDTO();
-        dto.setPage(0); // 기본 페이지 번호
-        dto.setSize(10); // 기본 페이지 크기
-        return dto;
+    public PageRequestDto(int page, int size) {
+        this.page = page;
+        this.size = size;
+    }
+
+    public static PageRequestDto getDefault() {
+        return new PageRequestDto(0, 10);
     }
 
     public Pageable toPageable() {
-        return PageRequest.of(page, size);
+        return PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "foodID"));
     }
 
     public int getPage() {

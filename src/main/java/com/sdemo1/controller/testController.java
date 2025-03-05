@@ -6,8 +6,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Controller
 public class TestController {
+
+
+    @GetMapping("/")
+    public String index(){
+
+        log.trace("TRACE!!");
+        log.debug("DEBUG!!");
+        log.info("INFO!!");
+        log.warn("WARN!!");
+        log.error("ERROR!!");
+
+        return "index";
+    }
+
     @GetMapping("/test")
     public String test(Model model) {
         model.addAttribute("data", "test~~!!");
