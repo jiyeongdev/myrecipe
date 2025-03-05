@@ -1,6 +1,8 @@
 package com.sdemo1.controller;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -14,12 +16,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sdemo1.common.response.ApiResponse;
-import com.sdemo1.common.utils.ValidateUtils;
 import com.sdemo1.dto.FoodCategoryDto;
-import com.sdemo1.dto.FoodCategoryResponse;
 import com.sdemo1.dto.PageRequestDto;
 import com.sdemo1.entity.FoodItem;
-import com.sdemo1.exception.CustomException;
 import com.sdemo1.service.FoodService;
 
 @RestController
@@ -37,43 +36,42 @@ public class FoodCategoryController {
     }
 
     @GetMapping("/allCategory")
-    public ApiResponse<FoodCategoryResponse> findFoodCategory() {
+    public ApiResponse<List<Map<String, Object>>> findFoodCategory() {
         List<FoodItem> foodItems = foodService.findFoodCategory();
         
         // 서브 카테고리 맵 생성
-        Map<String, List<FoodItem>> subMapCategory = foodItems.stream()
+        Map<String, List<Map<String, Object>>> subMapCategory = foodItems.stream()
                 .filter(obj -> !("P".equals(obj.getParentID()) || "R".equals(obj.getParentID())))
-                .collect(Collectors.groupingBy(FoodItem::getParentID));
+                .collect(Collectors.groupingBy(
+            FoodItem::getParentID,
+            Collectors.mapping(
+                item -> {
+                    Map<String, Object> subCategory = new HashMap<>();
+                    subCategory.put("sID", item.getFoodID());
+                    subCategory.put("sName", item.getFoodName());
+                    // ID 필드는 제외하고 필요한 필드만 추가
+                    return subCategory;
+                },
+                Collectors.toList()
+            )
+        ));
 
-        // 메인 카테고리 리스트 생성
-        List<FoodItem> mainMapCategory = foodItems.stream()
+        // 메인 카테고리 리스트 생성 및 서브카테고리 매핑
+        List<Map<String, Object>> result = foodItems.stream()
                 .filter(obj -> "P".equals(obj.getParentID()) || "R".equals(obj.getParentID()))
-                .collect(Collectors.toList()); // List<FoodItem>으로 변환
+                .map(main -> {
+                    Map<String, Object> categoryMap = new HashMap<>();
+                    categoryMap.put("mID", main.getFoodID());
+                    categoryMap.put("mName", main.getFoodName());
+                    categoryMap.put("sList", subMapCategory.getOrDefault(String.valueOf(main.getFoodID()), Collections.emptyList()));
+                    return categoryMap;
+                })
+                .collect(Collectors.toList());
 
-        // FoodCategoryResponse 생성
-        FoodCategoryResponse foodCategoryData = new FoodCategoryResponse(mainMapCategory, subMapCategory);
-
-        return new ApiResponse<>(true, "성공", foodCategoryData, HttpStatus.OK);
+        return new ApiResponse<>(true, "성공", result, HttpStatus.OK);
     }
 
-    @GetMapping("/ingredient")
-    public ApiResponse<?> findIngredient(@RequestParam Map<String, String> cIDs) {
-        if (!ValidateUtils.isValidParam(cIDs.get("mID")) || !ValidateUtils.isValidParam(cIDs.get("sID"))) {
-            throw new CustomException("mID 또는 sID 키는 존재하나 값이 비어있습니다.", HttpStatus.BAD_REQUEST.value());
-        }
-
-        return new ApiResponse<>(true, "성공", foodService.findIngredientByID(cIDs), HttpStatus.OK);
-    }
-
-    @GetMapping("/ingredient-all")
-    public ApiResponse<?> allIngredient(@RequestParam Integer lastID, @RequestParam(defaultValue = "10") int size) {
-        if (lastID == null) {
-            lastID = 0;
-        }
-        return new ApiResponse<>(true, "성공", foodService.allIngredient(lastID, size), HttpStatus.OK);
-    }
-
-    @GetMapping("/sub-ingredient")
+    @GetMapping("/sub-ingredient") //사용하진 않으나 그냥 테스트용
     public ApiResponse<List<FoodItem>> getSubIngredient(@RequestParam("parentID") String parentID){
         List<FoodItem> foodItems = foodService.GetByParentID(parentID);
         System.out.println("parentID : " + parentID +" 에 대한 하위분류 "+foodItems);
@@ -84,8 +82,8 @@ public class FoodCategoryController {
     @GetMapping("/findIngredientByFilter")
     public ApiResponse<?> findIngredientByFilter(
             @ModelAttribute FoodCategoryDto params,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size) {
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size) {
         
         params.setPageRequest(new PageRequestDto(page, size));
         return new ApiResponse<>(true, "성공", foodService.findIngredientByFilter(params), HttpStatus.OK);

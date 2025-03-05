@@ -20,9 +20,14 @@ public class FoodCategoryDto {
         dto.setMID(params.get("mID"));
         dto.setSID(params.get("sID"));
             
-        int page = params.containsKey("page") ? Integer.parseInt(params.get("page")) : 0;
-        int size = params.containsKey("size") ? Integer.parseInt(params.get("size")) : 10;
-        dto.setPageRequest(new PageRequestDto(page, size));
+        // page나 size 파라미터가 없으면 페이징 없이 전체 조회
+        if (!params.containsKey("page") && !params.containsKey("size")) {
+            dto.setPageRequest(null);
+        } else {
+            Integer page = params.containsKey("page") ? Integer.parseInt(params.get("page")) : null;
+            Integer size = params.containsKey("size") ? Integer.parseInt(params.get("size")) : null;
+            dto.setPageRequest(new PageRequestDto(page, size));
+        }
         
         return dto;
     }
@@ -44,7 +49,10 @@ public class FoodCategoryDto {
     }
 
     public PageRequestDto getPageRequest() {
-        return pageRequest != null ? pageRequest : PageRequestDto.getDefault();
+        if (pageRequest.getPage() == null && pageRequest.getSize() == null) { //페이징 없이 전체 조회
+            return new PageRequestDto(null, null);
+        }
+        return pageRequest;
     }
 
     public void setPageRequest(PageRequestDto pageRequest) {

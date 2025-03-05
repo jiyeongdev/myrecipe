@@ -1,16 +1,13 @@
 package com.sdemo1.service;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import static com.sdemo1.common.utils.ValidateUtils.isNullOrEmpty;
 import com.sdemo1.dto.FoodCategoryDto;
-import com.sdemo1.dto.PageRequestDto;
 import com.sdemo1.entity.FoodItem;
 import com.sdemo1.exception.CustomException;
 import com.sdemo1.repository.FoodQueryDSLRepository;
@@ -36,26 +33,9 @@ public class FoodService {
     }
 
     
-    public List<FoodItem> findIngredientByID(Map<String, String> CIDs) {
-        return foodQueryDSLRepository.findIngredientByID(CIDs);
-    }
-
-    public List<FoodItem> allIngredient(Integer lastID, int size) {
-        // Implement the logic here
-        return null; // Return the actual result instead of null
-    }
 
     public Page<FoodItem> findIngredientByFilter(FoodCategoryDto params) {
 
-        PageRequestDto getpages = params.getPageRequest();
-        System.out.println("---------------------------------@@@");
-        System.out.println("getpages : " + getpages);
-        System.out.println("---------------------------------@@@");
-        Pageable pageable = getpages.toPageable();
-        System.out.println("---------------------------------@@@");
-        System.out.println("pageable : " + pageable);
-        System.out.println("---------------------------------@@@");
-        
         if (isNullOrEmpty(params.getSID()) && isNullOrEmpty(params.getMID())) {
             return findAllIngredients(params);
         } else if (isNullOrEmpty(params.getSID())) {
