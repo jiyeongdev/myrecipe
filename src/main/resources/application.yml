@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: sdemo1
+  thymeleaf:
+    prefix: classpath:/templates/ #Thymeleaf 템플릿 파일 경로입니다. (/templates/ 폴더를 기준으로 설정)
+    suffix: .html
+    cache: false  # 템플릿 캐싱 비활성화하여 변경 사항이 즉시 반영되도록 설정 (개발 시 유용)
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  datasource:
+    url: jdbc:mysql://my-database-1.chcgci8m4swm.ap-northeast-2.rds.amazonaws.com:3306/food
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: admin
+    password: belle3079!
+    connection-timeout: 10000 # 10초로 늘리기
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        ddl-auto: update # 운영 환경에서는 'validate' 또는 'none'을 권장
+        dialect: org.hibernate.dialect.MySQL8Dialect # 중요 -mysql8 Dialect 설정
+        format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+
+# logging:
+#   level:
+#     org.thymeleaf: DEBUG
+#     org:
+#       hibernate:
+#         SQL: DEBUG
+#         type:
+#           descriptor:
+#             sql:
+#               BasicBinder: TRACE
+
+aws:
+  s3:
+    bucket: myrecipe-bucket
+    recipe-folder: recipe
+    region: us-east-1
+
+
+server:
+  address: 0.0.0.0
+  port: 8080  # 필요에 따라 포트 설정
