@@ -1,0 +1,122 @@
+name: Deploy to ECS on Development Push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. 리포지토리 체크아웃
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. .env 파일 로드 및 검증
+      - name: Load and validate .env file
+        run: |
+          if [ -f .env ]; then
+            export $(cat .env | grep -v '#' | awk '/=/ {print $1}')
+          else
+            echo ".env 파일이 없습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          # 환경 변수 검증
+          if [ -z "$AWS_ACCOUNT_ID" ]; then
+            echo "AWS_ACCOUNT_ID가 설정되지 않았습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          if [ -z "$AWS_REGION" ]; then
+            echo "AWS_REGION이 설정되지 않았습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          if [ -z "$ECR_REPOSITORY_NAME" ]; then
+            echo "ECR_REPOSITORY_NAME이 설정되지 않았습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          if [ -z "$ECS_CLUSTER" ]; then
+            echo "ECS_CLUSTER가 설정되지 않았습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          if [ -z "$ECS_SERVICE" ]; then
+            echo "ECS_SERVICE가 설정되지 않았습니다. .env 파일을 확인해주세요."
+            exit 1
+          fi
+          # ENVIRONMENT 검증
+          if [ -z "$ENVIRONMENT" ]; then
+            echo "ENVIRONMENT가 설정되지 않아 기본값 'development'로 설정됩니다."
+            export ENVIRONMENT="development"
+          fi
+          case "$ENVIRONMENT" in
+            "dev")
+              export ENVIRONMENT="development"
+              echo "ENVIRONMENT 'dev'가 'development'로 변환되었습니다."
+              ;;
+            "test"|"development")
+              ;;
+            *)
+              echo "지원하지 않는 ENVIRONMENT 값입니다: $ENVIRONMENT"
+              echo "기본값 'development'로 설정됩니다."
+              export ENVIRONMENT="development"
+              ;;
+          esac
+          # 배포 정보 출력
+          echo "=== 배포 정보 ==="
+          echo "AWS Account ID: $AWS_ACCOUNT_ID"
+          echo "AWS Region: $AWS_REGION"
+          echo "ECR Repository: $ECR_REPOSITORY_NAME"
+          echo "Environment: $ENVIRONMENT"
+
+      # 3. Java 환경 설정 (Spring Boot 프로젝트용)
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 4. AWS CLI 설정 및 ECR 로그인
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 5. Gradle 캐시 설정 (빌드 속도 개선)
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle-
+
+      # 6. Docker 이미지 빌드
+      - name: Build Docker image
+        run: |
+          IMAGE_TAG="${ECR_REPOSITORY_NAME}:${ENVIRONMENT}"
+          ./gradlew bootBuildImage --imageName=${IMAGE_TAG}
+
+      # 7. ECR에 이미지 태그 지정 및 푸시
+      - name: Tag and push image to Amazon ECR
+        run: |
+          ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}"
+          docker tag ${ECR_REPOSITORY_NAME}:${ENVIRONMENT} ${ECR_URI}:${ENVIRONMENT}
+          docker push ${ECR_URI}:${ENVIRONMENT}
+          echo "Pushed image: ${ECR_URI}:${ENVIRONMENT}"
+
+      # 8. ECS 태스크 정의 업데이트 및 배포
+      - name: Update ECS service
+        run: |
+          ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_NAME}"
+          aws ecs update-service \
+            --cluster ${ECS_CLUSTER} \
+            --service ${ECS_SERVICE} \
+            --force-new-deployment \
+            --region ${AWS_REGION}
+          echo "ECS service ${ECS_SERVICE} updated with new image: ${ECR_URI}:${ENVIRONMENT}"
