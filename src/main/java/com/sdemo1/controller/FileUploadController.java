@@ -113,6 +113,8 @@ public class FileUploadController {
     @PostMapping({"/get-presigned-url"})
     public ApiResponse<Map<String, String>> getPresignedUrl(@RequestParam("userId") Integer userId, @RequestParam("contentType") String contentType) {
         try {
+
+            
             String uniqueFileName = userId.toString();
             String bucketPath = this.recipeFolder + "/" + uniqueFileName;
             S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(ProfileCredentialsProvider.create()).build();
