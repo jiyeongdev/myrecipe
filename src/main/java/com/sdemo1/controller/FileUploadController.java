@@ -30,7 +30,7 @@ import com.sdemo1.dto.RecipeStepDto;
 import com.sdemo1.exception.CustomException;
 
 import jakarta.annotation.PostConstruct;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -56,7 +56,7 @@ public class FileUploadController {
 
     @PostConstruct
     public void initializeS3Client() {
-        this.s3Client = (S3Client)((S3ClientBuilder)((S3ClientBuilder)S3Client.builder().region(Region.of(this.region))).credentialsProvider(ProfileCredentialsProvider.create())).build();
+        this.s3Client = (S3Client)((S3ClientBuilder)((S3ClientBuilder)S3Client.builder().region(Region.of(this.region))).credentialsProvider(DefaultCredentialsProvider.create())).build();
     }
 
     @PostMapping({"/upload-recipe"})
@@ -114,10 +114,9 @@ public class FileUploadController {
     public ApiResponse<Map<String, String>> getPresignedUrl(@RequestParam("userId") Integer userId, @RequestParam("contentType") String contentType) {
         try {
 
-            
-            String uniqueFileName = userId.toString();
-            String bucketPath = this.recipeFolder + "/" + uniqueFileName;
-            S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(ProfileCredentialsProvider.create()).build();
+            String var10000 = UUID.randomUUID().toString();
+            String bucketPath = this.recipeFolder + "/" + userId.toString() +"/"+ var10000;
+            S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(DefaultCredentialsProvider.create()).build();
 
             ApiResponse var10;
             try {
@@ -152,17 +151,17 @@ public class FileUploadController {
     }
 
     @PostMapping({"/get-presigned-urls"})
-    public ApiResponse<List<Map<String, String>>> getPresignedUrls(@RequestParam("count") int count, @RequestParam("contentType") String contentType) {
+    public ApiResponse<List<Map<String, String>>> getPresignedUrls(@RequestParam("userId") Integer userId, @RequestParam("count") int count, @RequestParam("contentType") String contentType) {
         try {
             List<Map<String, String>> presignedUrls = new ArrayList();
-            S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(ProfileCredentialsProvider.create()).build();
+            S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(DefaultCredentialsProvider.create()).build();
 
             try {
                 for(int i = 0; i < count; ++i) {
                     String extension = this.getExtensionFromContentType(contentType);
                     String var10000 = UUID.randomUUID().toString();
                     String uniqueFileName = var10000 + "-image" + (i + 1) + "." + extension;
-                    String bucketPath = this.recipeFolder + "/" + uniqueFileName;
+                    String bucketPath = this.recipeFolder + "/" + userId.toString() + "/" + uniqueFileName;
                     PutObjectRequest objectRequest = (PutObjectRequest)PutObjectRequest.builder().bucket(this.bucketName).key(bucketPath).contentType(contentType).build();
                     PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(10L)).putObjectRequest(objectRequest).build();
                     PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(presignRequest);
