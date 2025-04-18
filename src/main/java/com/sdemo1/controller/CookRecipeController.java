@@ -77,7 +77,7 @@ public class CookRecipeController {
 
     @PutMapping("/{cookId}")
     public ApiResponse<Void> updateRecipe(
-            @PathVariable("cookId") int cookId,
+            @PathVariable("cookId")  int cookId,
             @RequestBody CookRecipeRequest request) {
         try {
             cookRecipeService.updateRecipe(cookId, request);

@@ -13,10 +13,7 @@ import com.sdemo1.dto.CookRecipeRequest;
 import com.sdemo1.entity.RecipeStep;
 import com.sdemo1.repository.RecipeStepRepository;
 import org.springframework.transaction.annotation.Transactional;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-
+import com.sdemo1.util.DefaultFieldHandler;
 
 @Service
 public class CookRecipeService {
@@ -27,6 +24,8 @@ public class CookRecipeService {
     private RecipeStepRepository recipeStepRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private DefaultFieldHandler defaultFieldHandler;
 
     public CookRecipeService() {
     }
@@ -34,181 +33,52 @@ public class CookRecipeService {
     public List<CookRecipeResponse> getRecipesByUserId(Integer userId) {
         List<CookItem> cookItems = cookItemRepository.findByUserId(userId);
         return cookItems.stream()
-            .map(item -> {
-                try {
-                    RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
-                        .orElse(null);
-                    
-                    // cookIngredient 파싱 및 필드 누락 처리
-                    JsonNode ingredientNode = objectMapper.readTree(item.getCookIngredient());
-                    JsonNode processedIngredientNode = processIngredientNode(ingredientNode);
-                    
-                    // recipeSteps 파싱 및 필드 누락 처리
-                    JsonNode recipeStepsNode = null;
-                    if (recipeStep != null) {
-                        recipeStepsNode = objectMapper.readTree(recipeStep.getRecipeSteps());
-                        recipeStepsNode = processRecipeStepsNode(recipeStepsNode);
-                    }
-                    
-                    return CookRecipeResponse.builder()
-                        .cookId(item.getCookId())
-                        .userId(item.getUserId())
-                        .cookTitle(item.getCookTitle())
-                        .cookImg(item.getCookImg())
-                        .cookIngredient(processedIngredientNode)
-                        .recipeSteps(recipeStepsNode)
-                        .build();
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException("JSON 파싱 중 오류 발생", e);
-                }
-            })
+            .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
-
+    
     public List<CookRecipeResponse> getRecipesByCookId(Integer cookId) {
         List<CookItem> cookItems = cookItemRepository.findByCookId(cookId);
         return cookItems.stream()
-            .map(item -> {
-                try {
-                    RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
-                        .orElse(null);
-                    
-                    // cookIngredient 파싱 및 필드 누락 처리
-                    JsonNode ingredientNode = objectMapper.readTree(item.getCookIngredient());
-                    JsonNode processedIngredientNode = processIngredientNode(ingredientNode);
-                    
-                    // recipeSteps 파싱 및 필드 누락 처리
-                    JsonNode recipeStepsNode = null;
-                    if (recipeStep != null) {
-                        recipeStepsNode = objectMapper.readTree(recipeStep.getRecipeSteps());
-                        recipeStepsNode = processRecipeStepsNode(recipeStepsNode);
-                    }
-                    
-                    return CookRecipeResponse.builder()
-                        .cookId(item.getCookId())
-                        .userId(item.getUserId())
-                        .cookTitle(item.getCookTitle())
-                        .cookImg(item.getCookImg())
-                        .cookIngredient(processedIngredientNode)
-                        .recipeSteps(recipeStepsNode)
-                        .build();
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException("JSON 파싱 중 오류 발생", e);
-                }
-            })
+            .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
     
     /**
-     * Ingredient 노드를 처리하여 필드 누락 시 기본값 설정
+     * CookItem을 CookRecipeResponse로 변환
      */
-    private JsonNode processIngredientNode(JsonNode ingredientNode) {
+    private CookRecipeResponse convertToResponse(CookItem item) {
         try {
-            // 배열인 경우 각 요소 처리
-            if (ingredientNode.isArray()) {
-                ArrayNode resultArray = objectMapper.createArrayNode();
-                
-                for (JsonNode node : ingredientNode) {
-                    ObjectNode processedNode = objectMapper.createObjectNode();
-                    
-                    // 필수 필드 확인 및 기본값 설정
-                    processedNode.put("unit", node.has("unit") ? node.get("unit").asText() : "");
-                    processedNode.put("foodId", node.has("foodId") ? node.get("foodId").asInt() : 0);
-                    processedNode.put("unitId", node.has("unitId") ? node.get("unitId").asInt() : 0);
-                    processedNode.put("quantity", node.has("quantity") ? node.get("quantity").asText() : "0");
-                    processedNode.put("foodName", node.has("foodName") ? node.get("foodName").asText() : "알 수 없음");
-                    processedNode.put("isRequired", node.has("isRequired") ? node.get("isRequired").asText() : "Y");
-                    
-                    resultArray.add(processedNode);
-                }
-                
-                return resultArray;
-            } 
-            // 단일 객체인 경우
-            else if (ingredientNode.isObject()) {
-                ObjectNode processedNode = objectMapper.createObjectNode();
-                
-                // 필수 필드 확인 및 기본값 설정
-                processedNode.put("unit", ingredientNode.has("unit") ? ingredientNode.get("unit").asText() : "");
-                processedNode.put("foodId", ingredientNode.has("foodId") ? ingredientNode.get("foodId").asInt() : 0);
-                processedNode.put("unitId", ingredientNode.has("unitId") ? ingredientNode.get("unitId").asInt() : 0);
-                processedNode.put("quantity", ingredientNode.has("quantity") ? ingredientNode.get("quantity").asText() : "0");
-                processedNode.put("foodName", ingredientNode.has("foodName") ? ingredientNode.get("foodName").asText() : "알 수 없음");
-                processedNode.put("isRequired", ingredientNode.has("isRequired") ? ingredientNode.get("isRequired").asText() : "Y");
-                
-                return processedNode;
+            RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
+                .orElse(null);
+            
+            // cookIngredient 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.Ingredient> ingredients = objectMapper.readValue(
+                item.getIngredients(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.Ingredient.class)
+            );
+            List<CookRecipeRequest.Ingredient> processedIngredients = defaultFieldHandler.setDefaultIngredientFields(ingredients);
+            
+            // recipeSteps 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.RecipeStepDetail> recipeSteps = null;
+            if (recipeStep != null) {
+                recipeSteps = objectMapper.readValue(
+                    recipeStep.getRecipeSteps(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.RecipeStepDetail.class)
+                );
+                recipeSteps = defaultFieldHandler.setDefaultRecipeStepFields(recipeSteps);
             }
             
-            // 배열이나 객체가 아닌 경우 기본 구조 반환
-            ObjectNode defaultNode = objectMapper.createObjectNode();
-            defaultNode.put("unit", "");
-            defaultNode.put("foodId", 0);
-            defaultNode.put("unitId", 0);
-            defaultNode.put("quantity", "0");
-            defaultNode.put("foodName", "알 수 없음");
-            defaultNode.put("isRequired", "Y");
-            
-            return defaultNode;
-        } catch (Exception e) {
-            // 오류 발생 시 기본 구조 반환
-            ObjectNode errorNode = objectMapper.createObjectNode();
-            errorNode.put("unit", "");
-            errorNode.put("foodId", 0);
-            errorNode.put("unitId", 0);
-            errorNode.put("quantity", "0");
-            errorNode.put("foodName", "알 수 없음");
-            errorNode.put("isRequired", "Y");
-            errorNode.put("error", "데이터 처리 중 오류 발생");
-            
-            return errorNode;
-        }
-    }
-
-    /**
-     * RecipeSteps 노드를 처리하여 필드 누락 시 기본값 설정
-     */
-    private JsonNode processRecipeStepsNode(JsonNode recipeStepsNode) {
-        try {
-            // 배열인 경우 각 요소 처리
-            if (recipeStepsNode.isArray()) {
-                ArrayNode resultArray = objectMapper.createArrayNode();
-                
-                for (JsonNode node : recipeStepsNode) {
-                    ObjectNode processedNode = objectMapper.createObjectNode();
-                    
-                    // 필수 필드 확인 및 기본값 설정
-                    processedNode.put("description", node.has("description") ? node.get("description").asText() : "");
-                    processedNode.put("img", node.has("img") ? node.get("img").asText() : "");
-                    
-                    resultArray.add(processedNode);
-                }
-                
-                return resultArray;
-            } 
-            // 단일 객체인 경우
-            else if (recipeStepsNode.isObject()) {
-                ObjectNode processedNode = objectMapper.createObjectNode();
-                
-                // 필수 필드 확인 및 기본값 설정
-                processedNode.put("description", recipeStepsNode.has("description") ? recipeStepsNode.get("description").asText() : "");
-                processedNode.put("img", recipeStepsNode.has("img") ? recipeStepsNode.get("img").asText() : "");
-                
-                return processedNode;
-            }
-            
-            // 배열이나 객체가 아닌 경우 기본 구조 반환
-            ObjectNode defaultNode = objectMapper.createObjectNode();
-            defaultNode.put("description", "");
-            defaultNode.put("img", "");
-            
-            return defaultNode;
-        } catch (Exception e) {
-            // 오류 발생 시 기본 구조 반환
-            ObjectNode errorNode = objectMapper.createObjectNode();
-            errorNode.put("description", "데이터 처리 중 오류 발생");
-            errorNode.put("img", "");
-            
-            return errorNode;
+            return CookRecipeResponse.builder()
+                .cookId(item.getCookId())
+                .userId(item.getUserId())
+                .cookTitle(item.getCookTitle())
+                .cookImg(item.getCookImg())
+                .Ingredients(processedIngredients)
+                .recipeSteps(recipeSteps)
+                .build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 파싱 중 오류 발생", e);
         }
     }
 
@@ -218,7 +88,7 @@ public class CookRecipeService {
             .userId(request.getUserId())
             .cookTitle(request.getCookTitle())
             .cookImg(request.getCookImg())
-            .cookIngredient(objectMapper.writeValueAsString(request.getIngredients()))
+            .ingredients(objectMapper.writeValueAsString(request.getIngredients()))
             .build();
         
         cookItem = cookItemRepository.save(cookItem);
@@ -239,9 +109,13 @@ public class CookRecipeService {
             .orElseThrow(() -> new IllegalArgumentException("해당하는 레시피가 없습니다."));
         
         try {
+            // 필드 검증
+            defaultFieldHandler.validateIngredientFields(request.getIngredients());
+            defaultFieldHandler.validateRecipeStepFields(request.getRecipeSteps());
+            
             existingCookItem.setCookTitle(request.getCookTitle());
             existingCookItem.setCookImg(request.getCookImg());
-            existingCookItem.setCookIngredient(objectMapper.writeValueAsString(request.getIngredients()));
+            existingCookItem.setIngredients(objectMapper.writeValueAsString(request.getIngredients()));
             
             // RecipeStep 업데이트
             recipeStepRepository.findByCookId(cookId)

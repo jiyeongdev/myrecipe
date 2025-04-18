@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 
 @Getter
 @Builder
@@ -15,6 +16,6 @@ public class CookRecipeResponse {
     private Integer userId;
     private String cookTitle;
     private String cookImg;
-    private JsonNode cookIngredient;
-    private JsonNode recipeSteps;
+    private List<CookRecipeRequest.Ingredient> Ingredients;
+    private List<CookRecipeRequest.RecipeStepDetail> recipeSteps;
 }

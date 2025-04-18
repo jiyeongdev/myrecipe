@@ -42,7 +42,7 @@ public class CookItem {
     private String cookImg;
 
     @Column(name = "cook_ingredient", columnDefinition = "json", nullable = false)
-    private String cookIngredient;
+    private String ingredients;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
