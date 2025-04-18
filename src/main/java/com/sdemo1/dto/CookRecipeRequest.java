@@ -18,6 +18,7 @@ public class CookRecipeRequest {
         private Integer unitId;
         private String quantity;
         private String foodName;
+        private String isRequired;
     }
 
     @Data
