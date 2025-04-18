@@ -31,13 +31,23 @@ public class CookRecipeService {
     public List<CookRecipeResponse> getRecipesByUserId(Integer userId) {
         List<CookItem> cookItems = cookItemRepository.findByUserId(userId);
         return cookItems.stream()
-            .map(item -> CookRecipeResponse.builder()
-                .cookId(item.getCookId())
-                .userId(item.getUserId())
-                .cookTitle(item.getCookTitle())
-                .cookImg(item.getCookImg())
-                .cookIngredient(item.getCookIngredient())
-                .build())
+            .map(item -> {
+                try {
+                    RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
+                        .orElse(null);
+                    
+                    return CookRecipeResponse.builder()
+                        .cookId(item.getCookId())
+                        .userId(item.getUserId())
+                        .cookTitle(item.getCookTitle())
+                        .cookImg(item.getCookImg())
+                        .cookIngredient(objectMapper.readTree(item.getCookIngredient()))
+                        .recipeSteps(recipeStep != null ? objectMapper.readTree(recipeStep.getRecipeSteps()) : null)
+                        .build();
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("JSON 파싱 중 오류 발생", e);
+                }
+            })
             .collect(Collectors.toList());
     }
 

@@ -41,14 +41,14 @@ public class CookRecipeController {
             List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByUserId(userId);
             return new ApiResponse<>(
                 true,
-                "신규 userID 생성",
+                null,
                 recipes,
                 HttpStatus.OK
             );
         } catch (Exception e) {
             return new ApiResponse<>(
                 false,
-                "신규 userID 생성 실패 " + e.getMessage(),
+                e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST
             );
