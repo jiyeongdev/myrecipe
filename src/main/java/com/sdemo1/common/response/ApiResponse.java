@@ -15,7 +15,14 @@ public class ApiResponse<T> {
         this.message = message;
         this.statusCode = status.value();
         this.data = data;
-        
+    }
+    
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(true, null, data, HttpStatus.OK);
+    }
+    
+    public static <T> ApiResponse<T> error(String message) {
+        return new ApiResponse<>(false, message, null, HttpStatus.BAD_REQUEST);
     }
 
     public boolean isSuccess() {

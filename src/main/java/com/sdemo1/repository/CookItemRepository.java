@@ -10,4 +10,5 @@ import com.sdemo1.entity.CookItem;
 @Repository
 public interface CookItemRepository extends JpaRepository<CookItem, Integer> {
     List<CookItem> findByUserId(Integer userId);
+    List<CookItem> findByCookId(Integer cookId);
 }

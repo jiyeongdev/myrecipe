@@ -55,6 +55,26 @@ public class CookRecipeController {
         }
     }
 
+    @GetMapping("/detail/{cookId}")
+    public ApiResponse<List<CookRecipeResponse>> getRecipesByCookID(@PathVariable("cookId") Integer cookId) {
+        try {
+            List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByCookId(cookId);
+            return new ApiResponse<>(
+                true,
+                null,
+                recipes,
+                HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return new ApiResponse<>(
+                false,
+                e.getMessage(),
+                null,
+                HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
     @PutMapping("/{cookId}")
     public ApiResponse<Void> updateRecipe(
             @PathVariable("cookId") int cookId,

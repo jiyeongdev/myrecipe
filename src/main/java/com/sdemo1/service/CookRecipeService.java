@@ -51,6 +51,28 @@ public class CookRecipeService {
             .collect(Collectors.toList());
     }
 
+    public List<CookRecipeResponse> getRecipesByCookId(Integer cookId) {
+        List<CookItem> cookItems = cookItemRepository.findByCookId(cookId);
+        return cookItems.stream()
+            .map(item -> {
+                try {
+                    RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
+                        .orElse(null);
+                    
+                    return CookRecipeResponse.builder()
+                        .cookId(item.getCookId())
+                        .userId(item.getUserId())
+                        .cookTitle(item.getCookTitle())
+                        .cookImg(item.getCookImg())
+                        .cookIngredient(objectMapper.readTree(item.getCookIngredient()))
+                        .recipeSteps(recipeStep != null ? objectMapper.readTree(recipeStep.getRecipeSteps()) : null)
+                        .build();
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("JSON 파싱 중 오류 발생", e);
+                }
+            })
+            .collect(Collectors.toList());
+    }
     @Transactional
     public Integer createRecipe(CookRecipeRequest request) throws Exception {
         CookItem cookItem = CookItem.builder()
