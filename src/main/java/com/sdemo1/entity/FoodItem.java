@@ -34,6 +34,9 @@ public class FoodItem {
     @Column(name="parent_id")
     private String parentID;
 
+    @Column(name="food_img")
+    private String foodImg;
+    
     @Transient
     @JsonProperty("sID")
     private int sID;

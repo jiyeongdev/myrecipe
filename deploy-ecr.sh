@@ -80,6 +80,7 @@ ECR_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY_
 echo -e "${GREEN}=== Docker 이미지 빌드 중 ===${NC}"
 ./gradlew bootBuildImage --imageName=${IMAGE_TAG}
 
+
 if [ $? -ne 0 ]; then
     echo -e "${RED}Docker 이미지 빌드 실패${NC}"
     exit 1
