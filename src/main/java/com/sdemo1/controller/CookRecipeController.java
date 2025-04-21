@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.dto.CookRecipeRequest;
@@ -91,6 +92,31 @@ public class CookRecipeController {
             return new ApiResponse<>(
                 false,
                 "레시피 업데이트 실패하였습니다: " + e.getMessage(),
+                null,
+                HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    /**
+     * 레시피 삭제 API
+     * @param cookId 삭제할 레시피 ID
+     * @return 삭제 결과
+     */
+    @DeleteMapping("/{cookId}")
+    public ApiResponse<Void> deleteRecipe(@PathVariable("cookId") int cookId) {
+        try {
+            cookRecipeService.deleteRecipe(cookId);
+            return new ApiResponse<>(
+                true,
+                "레시피가 성공적으로 삭제되었습니다.",
+                null,
+                HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return new ApiResponse<>(
+                false,
+                "레시피 삭제 실패하였습니다: " + e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST
             );

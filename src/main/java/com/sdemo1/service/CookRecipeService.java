@@ -143,4 +143,23 @@ public class CookRecipeService {
             throw new RuntimeException("레시피 업데이트 중 오류가 발생했습니다.", e);
         }
     }
+    
+    /**
+     * 레시피 삭제
+     * @param cookId 삭제할 레시피 ID
+     * @throws IllegalArgumentException 레시피가 존재하지 않는 경우
+     */
+    @Transactional
+    public void deleteRecipe(int cookId) {
+        // CookItem 존재 여부 확인
+        CookItem existingCookItem = cookItemRepository.findById(cookId)
+            .orElseThrow(() -> new IllegalArgumentException("해당하는 레시피가 없습니다."));
+        
+        // RecipeStep 삭제
+        recipeStepRepository.findByCookId(cookId)
+            .ifPresent(recipeStep -> recipeStepRepository.delete(recipeStep));
+        
+        // CookItem 삭제
+        cookItemRepository.delete(existingCookItem);
+    }
 }
