@@ -31,7 +31,7 @@ public class CookRecipeService {
     }
 
     public List<CookRecipeResponse> getRecipesByUserId(Integer userId) {
-        List<CookItem> cookItems = cookItemRepository.findByUserId(userId);
+        List<CookItem> cookItems = cookItemRepository.findByUserIdOrderByCreatedAtDesc(userId);
         return cookItems.stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());

@@ -11,4 +11,5 @@ import com.sdemo1.entity.CookItem;
 public interface CookItemRepository extends JpaRepository<CookItem, Integer> {
     List<CookItem> findByUserId(Integer userId);
     List<CookItem> findByCookId(Integer cookId);
+    List<CookItem> findByUserIdOrderByCreatedAtDesc(Integer userId);
 }
