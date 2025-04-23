@@ -95,4 +95,8 @@ public class FoodService {
     private Page<FoodItem> findAllIngredients(FoodCategoryDto params) {
         return foodRepository.findByFoodIDBetween(50000, 59999, params.getPageRequest().toPageable());
     }
+
+    public List<FoodItem> findByFoodName(String keyword) {
+        return foodRepository.findByFoodNameContaining(keyword);
+    }
 }

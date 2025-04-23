@@ -16,4 +16,5 @@ public interface FoodRepository extends JpaRepository<FoodItem , Integer> {
     List<FoodItem> findByParentIDIn(List<String> parentID);
     Page<FoodItem> findByParentID(String parentID, Pageable pageable);
     Page<FoodItem> findByFoodIDBetween(int start, int end, Pageable pageable);
+    List<FoodItem> findByFoodNameContaining(String keyword);
 }

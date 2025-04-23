@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -89,4 +90,9 @@ public class FoodCategoryController {
         return new ApiResponse<>(true, "성공", foodService.findIngredientByFilter(params), HttpStatus.OK);
     }
 
+    @GetMapping("/search/{keyword}")
+    public ApiResponse<List<FoodItem>> findByFoodName(@PathVariable String keyword) {
+        List<FoodItem> foodItems = foodService.findByFoodName(keyword);
+        return new ApiResponse<>(true, "성공", foodItems, HttpStatus.OK);
+    }
 } 
