@@ -14,6 +14,7 @@ import com.sdemo1.exception.CustomException;
 import com.sdemo1.repository.FoodQueryDSLRepository;
 import com.sdemo1.repository.FoodRepository;
 import com.sdemo1.util.FoodCategoryUtil;
+import com.sdemo1.dto.PageRequestDto;
 
 @Service
 public class FoodService {
@@ -41,8 +42,7 @@ public class FoodService {
     }
 
     public Page<FoodItem> findIngredientByFilter(FoodCategoryDto params) {
-        List<FoodItem> foodItems = findFoodCategory();
-        Map<String, Map<String, Object>> categoryMap = FoodCategoryUtil.getCategoryMap(foodItems);
+        Map<String, Map<String, Object>> categoryMap = getCategoryMap();
         
         Page<FoodItem> item = null;
     
@@ -96,7 +96,26 @@ public class FoodService {
         return foodRepository.findByFoodIDBetween(50000, 59999, params.getPageRequest().toPageable());
     }
 
-    public List<FoodItem> findByFoodName(String keyword) {
-        return foodQueryDSLRepository.findByFoodNameContainingAndFoodIdStartingWithFive(keyword);
+    public Page<FoodItem> findByFoodName(String keyword, PageRequestDto pageRequest) {
+        Page<FoodItem> foodItems = foodQueryDSLRepository.findByFoodNameContainingAndFoodIdStartingWithFive(keyword, pageRequest.toPageable());
+        
+        Map<String, Map<String, Object>> categoryMap = getCategoryMap();
+        // categoryMap 정보를 item에 추가
+        return foodItems.map(foodItem -> {
+            String parentID = foodItem.getParentID();
+            Map<String, Object> categoryInfo = categoryMap.get(parentID);
+            
+            if (categoryInfo != null) {
+                try {
+                    foodItem.setSID(Integer.parseInt(parentID));
+                    foodItem.setSName(String.valueOf(categoryInfo.get("sName")));
+                    foodItem.setMID(Integer.parseInt(String.valueOf(categoryInfo.get("mID"))));
+                    foodItem.setMName(String.valueOf(categoryInfo.get("mName")));
+                } catch (Exception e) {
+                    System.out.println("데이터 변환 중 오류: " + e.getMessage());
+                }
+            }
+            return foodItem;
+        });
     }
 }

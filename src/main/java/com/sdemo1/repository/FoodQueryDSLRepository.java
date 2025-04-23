@@ -110,14 +110,36 @@ public class FoodQueryDSLRepository {
      * @param keyword 검색 키워드
      * @return 조건에 맞는 FoodItem 목록
      */
-    public List<FoodItem> findByFoodNameContainingAndFoodIdStartingWithFive(String keyword) {
-        return queryFactory
+ 
+    public Page<FoodItem> findByFoodNameContainingAndFoodIdStartingWithFive(String keyword, Pageable pageable) {
+        JPAQuery<FoodItem> query = queryFactory
             .selectFrom(QFoodItem.foodItem)
             .where(
-                QFoodItem.foodItem.foodName.contains(keyword)
+                QFoodItem.foodItem.foodName.containsIgnoreCase(keyword)
+                .and(QFoodItem.foodItem.foodID.stringValue().startsWith("5"))
+                .and(QFoodItem.foodItem.foodID.stringValue().length().goe(2))
+            );
+
+        if (pageable.isUnpaged()) {
+            List<FoodItem> content = query.fetch();
+            return new PageImpl<>(content, pageable, content.size());
+        }
+
+        List<FoodItem> content = query
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+
+        Long count = queryFactory
+            .select(QFoodItem.foodItem.count())
+            .from(QFoodItem.foodItem)
+            .where(
+                QFoodItem.foodItem.foodName.containsIgnoreCase(keyword)
                 .and(QFoodItem.foodItem.foodID.stringValue().startsWith("5"))
                 .and(QFoodItem.foodItem.foodID.stringValue().length().goe(2))
             )
-            .fetch();
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, count);
     }
 }

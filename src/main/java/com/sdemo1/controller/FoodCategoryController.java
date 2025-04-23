@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -91,8 +92,13 @@ public class FoodCategoryController {
     }
 
     @GetMapping("/search/{keyword}")
-    public ApiResponse<List<FoodItem>> findByFoodName(@PathVariable String keyword) {
-        List<FoodItem> foodItems = foodService.findByFoodName(keyword);
+    public ApiResponse<Page<FoodItem>> findByFoodName(
+            @PathVariable String keyword,
+            @RequestParam(name = "page", required = false) Integer page,
+            @RequestParam(name = "size", required = false) Integer size) {
+        
+        PageRequestDto pageRequest = new PageRequestDto(page, size);
+        Page<FoodItem> foodItems = foodService.findByFoodName(keyword, pageRequest);
         return new ApiResponse<>(true, "성공", foodItems, HttpStatus.OK);
     }
 } 
