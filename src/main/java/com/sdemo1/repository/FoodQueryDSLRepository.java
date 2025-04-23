@@ -103,4 +103,21 @@ public class FoodQueryDSLRepository {
             return new PageImpl(content, pageable, count);
         }
     }
+    
+    /**
+     * 음식 이름에 키워드가 포함되어 있고, parent_id가 '5'로 시작하는 두글자 이상인 FoodItem을 검색합니다.
+     * 
+     * @param keyword 검색 키워드
+     * @return 조건에 맞는 FoodItem 목록
+     */
+    public List<FoodItem> findByFoodNameContainingAndFoodIdStartingWithFive(String keyword) {
+        return queryFactory
+            .selectFrom(QFoodItem.foodItem)
+            .where(
+                QFoodItem.foodItem.foodName.contains(keyword)
+                .and(QFoodItem.foodItem.foodID.stringValue().startsWith("5"))
+                .and(QFoodItem.foodItem.foodID.stringValue().length().goe(2))
+            )
+            .fetch();
+    }
 }

@@ -97,6 +97,6 @@ public class FoodService {
     }
 
     public List<FoodItem> findByFoodName(String keyword) {
-        return foodRepository.findByFoodNameContaining(keyword);
+        return foodQueryDSLRepository.findByFoodNameContainingAndFoodIdStartingWithFive(keyword);
     }
 }
