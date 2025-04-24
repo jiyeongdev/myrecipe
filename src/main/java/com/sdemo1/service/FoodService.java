@@ -100,7 +100,7 @@ public class FoodService {
         Page<FoodItem> foodItems = foodQueryDSLRepository.findByFoodNameContainingAndFoodIdStartingWithFive(keyword, pageRequest.toPageable());
         
         Map<String, Map<String, Object>> categoryMap = getCategoryMap();
-        // categoryMap 정보를 item에 추가
+        // categoryMap 정보 item에 추가
         return foodItems.map(foodItem -> {
             String parentID = foodItem.getParentID();
             Map<String, Object> categoryInfo = categoryMap.get(parentID);
