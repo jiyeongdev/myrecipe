@@ -39,6 +39,12 @@ spring:
 #             sql:
 #               BasicBinder: TRACE
 
+# CORS 설정
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://dev-recipe-api-alb-872211479.ap-northeast-3.elb.amazonaws.com
+
 aws:
   s3:
     bucket: myrecipe-bucket

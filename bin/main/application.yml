@@ -22,6 +22,10 @@ spring:
         ddl-auto: update # 운영 환경에서는 'validate' 또는 'none'을 권장
         dialect: org.hibernate.dialect.MySQL8Dialect # 중요 -mysql8 Dialect 설정
         format_sql: true
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
 
 
 # logging:
@@ -35,9 +39,16 @@ spring:
 #             sql:
 #               BasicBinder: TRACE
 
+# CORS 설정
+cors:
+  allowed-origins:
+    - http://localhost:3000
+    - http://dev-recipe-api-alb-872211479.ap-northeast-3.elb.amazonaws.com
+
 aws:
   s3:
     bucket: myrecipe-bucket
+    recipe-folder: recipe
     region: ap-northeast-3
 
 

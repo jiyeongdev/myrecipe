@@ -21,6 +21,8 @@ public class QFoodItem extends EntityPathBase<FoodItem> {
 
     public final NumberPath<Integer> foodID = createNumber("foodID", Integer.class);
 
+    public final StringPath foodImg = createString("foodImg");
+
     public final StringPath foodName = createString("foodName");
 
     public final NumberPath<Integer> id = createNumber("id", Integer.class);

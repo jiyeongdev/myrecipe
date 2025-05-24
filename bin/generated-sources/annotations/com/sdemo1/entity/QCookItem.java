@@ -23,11 +23,11 @@ public class QCookItem extends EntityPathBase<CookItem> {
 
     public final StringPath cookImg = createString("cookImg");
 
-    public final StringPath cookIngredient = createString("cookIngredient");
-
     public final StringPath cookTitle = createString("cookTitle");
 
     public final DateTimePath<java.time.LocalDateTime> createdAt = createDateTime("createdAt", java.time.LocalDateTime.class);
+
+    public final StringPath ingredients = createString("ingredients");
 
     public final DateTimePath<java.time.LocalDateTime> modifiedAt = createDateTime("modifiedAt", java.time.LocalDateTime.class);
 
