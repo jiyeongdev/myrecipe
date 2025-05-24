@@ -13,6 +13,18 @@ on:
       - '!README.md'
       - '!.gitignore'
       - '!**/*.md'
+  # 수동 실행을 위한 워크플로우 디스패치 추가
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '배포 환경'
+        required: true
+        default: 'development'
+        type: choice
+        options:
+          - development
+          - test
+          - production
 
 env:
   ENVIRONMENT: development
