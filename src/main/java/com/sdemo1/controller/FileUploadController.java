@@ -41,7 +41,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequ
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
 @RestController
-@RequestMapping({"${api.base-path}/file"})
+@RequestMapping({"/file"})
 public class FileUploadController {
     @Value("${aws.s3.bucket}")
     private String bucketName;

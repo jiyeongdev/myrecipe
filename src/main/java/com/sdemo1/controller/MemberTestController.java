@@ -10,8 +10,8 @@ import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.service.MemberService;
 
 @RestController
-@RequestMapping("/member")
-public class MemberController {
+@RequestMapping("/api/proxy/member")
+public class MemberTestController {
 
     @Autowired
     private MemberService memberService;

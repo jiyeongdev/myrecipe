@@ -12,7 +12,7 @@ import com.sdemo1.entity.FoodOption;
 import com.sdemo1.service.FoodOptionService;
 
 @RestController
-@RequestMapping("${api.base-path}/api/food-options")
+@RequestMapping("/api/food-options")
 public class FoodOptionController {
 
     private final FoodOptionService foodOptionService;

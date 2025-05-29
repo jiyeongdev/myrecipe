@@ -75,10 +75,6 @@ aws:
     recipe-folder: recipe
     region: ap-northeast-3
 
-# API 설정
-api:
-  base-path: /api/proxy
-
 server:
   address: 0.0.0.0
   port: 8080  # 필요에 따라 포트 설정

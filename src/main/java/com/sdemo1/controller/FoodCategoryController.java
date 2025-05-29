@@ -24,7 +24,7 @@ import com.sdemo1.entity.FoodItem;
 import com.sdemo1.service.FoodService;
 
 @RestController
-@RequestMapping("${api.base-path}/food")
+@RequestMapping("/food")
 public class FoodCategoryController {
 
     @Autowired
