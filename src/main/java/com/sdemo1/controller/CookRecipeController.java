@@ -20,7 +20,7 @@ import com.sdemo1.service.CookRecipeService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/cook/recipes")
+@RequestMapping("${api.base-path}/cook/recipes")
 @RequiredArgsConstructor
 public class CookRecipeController {
 

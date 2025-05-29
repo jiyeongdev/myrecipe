@@ -10,7 +10,7 @@ import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.service.MemberService;
 
 @RestController
-@RequestMapping("/member")
+@RequestMapping("${api.base-path}/member")
 public class MemberController {
 
     @Autowired

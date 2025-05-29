@@ -17,9 +17,11 @@ public class LoggingInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         String queryString = request.getQueryString();
         
+        String actualPath = requestURI.replace("/api/proxy", "");
+        
         String fullUrl = queryString != null ? 
-            requestURI + "?" + queryString : 
-            requestURI;
+            actualPath + "?" + queryString : 
+            actualPath;
             
         log.info("[API Request] {} {}", method, fullUrl);
         return true;
@@ -31,6 +33,8 @@ public class LoggingInterceptor implements HandlerInterceptor {
         String method = request.getMethod();
         int status = response.getStatus();
         
-        log.info("[API Response] {} {} - Status: {}", method, requestURI, status);
+        String actualPath = requestURI.replace("/api/proxy", "");
+        
+        log.info("[API Response] {} {} - Status: {}", method, actualPath, status);
     }
 } 

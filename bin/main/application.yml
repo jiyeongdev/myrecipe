@@ -75,6 +75,9 @@ aws:
     recipe-folder: recipe
     region: ap-northeast-3
 
+# API 설정
+api:
+  base-path: /api/proxy
 
 server:
   address: 0.0.0.0
