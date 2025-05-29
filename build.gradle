@@ -70,6 +70,9 @@ dependencies {
 
     // Utils
     implementation 'org.fusesource.jansi:jansi:1.18'
+
+    // CloudWatch Logs
+    implementation 'ca.pjer:logback-awslogs-appender:1.6.0'
 }
 
 compileJava {

@@ -44,11 +44,31 @@ logging:
     max-history: 30
 
 # CORS 설정
-cors:
-  allowed-origins:
-    - http://localhost:3000
-    - http://dev-recipe-api-alb-872211479.ap-northeast-3.elb.amazonaws.com
+# cors:
+#   allowed-origins:
+#     - http://localhost:3000
+#     - https://www.myrecipe.top
 
+# Redis 설정
+redis:
+  host: localhost
+  port: 6379
+  database: 0
+  timeout: 10000
+  lettuce:
+    pool:
+      max-active: 8
+      max-idle: 8
+      min-idle: 0
+      max-wait: -1
+
+# JWT 설정
+jwt:
+  secret: your-jwt-secret-key-here-make-it-long-and-secure
+  access-token-validity-in-seconds: 3600
+  refresh-token-validity-in-seconds: 86400
+
+# AWS 설정
 aws:
   s3:
     bucket: myrecipe-bucket

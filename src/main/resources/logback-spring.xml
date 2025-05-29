@@ -1,22 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %logger{36} - %msg%n"/>
-    <property name="SQL_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %logger{36} - %replace(%msg){'\n\s*', ' '}%n"/>
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] - %msg%n"/>
+    <property name="SQL_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] - %msg%n"/>
+    <property name="SQL_PATTERN_SINGLE_LINE" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] - %replace(%msg){'[\n\r\t]+', ' '}%n"/>
 
-    <!-- 콘솔 출력 -->
+    <!-- 콘솔 출력용 appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>true</withJansi>
         <encoder>
-            <pattern>${LOG_PATTERN}</pattern>
+            <pattern>${SQL_PATTERN}</pattern>
         </encoder>
+    </appender>
+
+    <!-- CloudWatch 출력용 appender -->
+    <appender name="CLOUDWATCH" class="ca.pjer.logback.AwsLogsAppender">
+        <encoder>
+            <pattern>${SQL_PATTERN_SINGLE_LINE}</pattern>
+        </encoder>
+        <logGroupName>/myrecipe/application</logGroupName>
+        <logStreamName>${HOSTNAME}</logStreamName>
+        <region>ap-northeast-3</region>
     </appender>
 
     <!-- SQL 로그만 별도로 출력 -->
     <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CLOUDWATCH"/>
     </logger>
     <logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
         <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="CLOUDWATCH"/>
     </logger>
 
     <!-- 루트 로거 -->
