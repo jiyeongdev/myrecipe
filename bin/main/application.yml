@@ -16,28 +16,32 @@ spring:
     password: belle3079!
     connection-timeout: 10000 # 10초로 늘리기
   jpa:
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        ddl-auto: update # 운영 환경에서는 'validate' 또는 'none'을 권장
-        dialect: org.hibernate.dialect.MySQL8Dialect # 중요 -mysql8 Dialect 설정
+        ddl-auto: update
+        dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
+        use_sql_comments: false
   h2:
     console:
       enabled: true
       path: /h2-console
 
 
-# logging:
-#   level:
-#     org.thymeleaf: DEBUG
-#     org:
-#       hibernate:
-#         SQL: DEBUG
-#         type:
-#           descriptor:
-#             sql:
-#               BasicBinder: TRACE
+logging:
+  level:
+    com.sdemo1: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/application.log
+    max-size: 10MB
+    max-history: 30
 
 # CORS 설정
 cors:

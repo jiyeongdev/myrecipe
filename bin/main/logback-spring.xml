@@ -1,29 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-   <property name="CONSOLE_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %magenta([%thread]) %highlight([%-3level]) %logger{5} - %msg %n" />
-   <property name="SQL_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %magenta([%thread]) %highlight([%-3level]){yellow} %logger{5} - %msg %n" />
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %logger{36} - %msg%n"/>
+    <property name="SQL_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %logger{36} - %replace(%msg){'\n\s*', ' '}%n"/>
 
-    <!-- Console appender 설정 -->
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- 콘솔 출력 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <withJansi>true</withJansi>
         <encoder>
-            <Pattern>${CONSOLE_PATTERN}</Pattern>
+            <pattern>${LOG_PATTERN}</pattern>
         </encoder>
     </appender>
 
-    <!-- SQL 로그에만 노란색 하이라이트 적용 -->
-    <appender name="SQL_APPENDER" class="ch.qos.logback.core.ConsoleAppender">
-        <withJansi>true</withJansi>
-        <encoder>
-            <Pattern>---------%n${SQL_PATTERN}%n---------%n</Pattern>
-        </encoder>
-    </appender>
-
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
-    </root>
-
-    <!-- SQL 로그에 대한 로거 설정 -->
-    <logger name="org.hibernate.SQL" level="DEBUG" additive="false">
-        <appender-ref ref="SQL_APPENDER"/>
+    <!-- SQL 로그만 별도로 출력 -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
     </logger>
+    <logger name="org.hibernate.type.descriptor.sql" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- 루트 로거 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
 </configuration>
