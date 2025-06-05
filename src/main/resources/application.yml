@@ -46,6 +46,9 @@ spring:
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
             user-name-attribute: sub
 
+  config:
+    import: optional:file:/app/config/dev-api.env
+
 # Redis 설정
 redis:
   host: localhost
@@ -93,11 +96,8 @@ aws:
     recipe-folder: recipe
     region: ap-northeast-3
 
-# API 설정
-api:
-  base-path: /api/proxy
-
 server:
   address: 0.0.0.0
   port: 8080  # 필요에 따라 포트 설정
   shutdown: graceful
+
