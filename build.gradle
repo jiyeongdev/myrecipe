@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.3.0'
-    id 'io.spring.dependency-management' version '1.1.5'
+    id 'org.springframework.boot' version '3.2.3'
+    id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'com.sdemo1'
@@ -35,6 +35,26 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
+    
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-config'
+    implementation 'org.springframework.security:spring-security-web'
+    
+    // JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1'
+    
+    // Redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.data:spring-data-redis'
+    implementation 'io.lettuce:lettuce-core'
+
+    //implementation 'org.springframework.data:spring-data-redis'
+    //implementation 'redis.clients:jedis:5.1.0'
+    //implementation 'org.apache.commons:commons-pool2:2.12.0'
 
     // AWS
     implementation 'software.amazon.awssdk:s3:2.20.82'
@@ -71,8 +91,16 @@ dependencies {
     // Utils
     implementation 'org.fusesource.jansi:jansi:1.18'
 
+
     // CloudWatch Logs
     implementation 'ca.pjer:logback-awslogs-appender:1.6.0'
+
+    // OAuth2 Client
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+    // Environment Variables
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
 }
 
 compileJava {

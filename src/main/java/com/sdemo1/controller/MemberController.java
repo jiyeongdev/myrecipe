@@ -19,6 +19,6 @@ public class MemberController {
     @PostMapping("/create/id")
     public ApiResponse<Integer> createMemberId() {
         int userId = memberService.createMember();
-        return new ApiResponse<>(true, "성공", userId, HttpStatus.OK);
+        return new ApiResponse<>( "성공", userId, HttpStatus.OK);
     }
 } 

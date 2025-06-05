@@ -12,7 +12,7 @@ public class HealthCheckController {
     @GetMapping("/health-check")
     public ApiResponse<String> healthCheck() {
         return new ApiResponse<>(
-            true,
+        
             "서버가 정상적으로 동작중입니다.",
             "OK",
             HttpStatus.OK

@@ -27,7 +27,44 @@ spring:
     console:
       enabled: true
       path: /h2-console
+      
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            scope:
+              - email
+              - profile
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
 
+# Redis 설정
+redis:
+  host: localhost
+  port: 6379
+  database: 0
+  timeout: 10000
+  lettuce:
+    pool:
+      max-active: 8
+      max-idle: 8
+      min-idle: 0
+      max-wait: -1
+
+# JWT 설정
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity-in-seconds: 3600    # 1시간 (3600초)
+  refresh-token-validity-in-seconds: 86400  # 24시간 (86400초)
+  expiration: 86400000 # 24시간
 
 logging:
   level:
@@ -49,25 +86,6 @@ logging:
 #     - http://localhost:3000
 #     - https://www.myrecipe.top
 
-# Redis 설정
-redis:
-  host: localhost
-  port: 6379
-  database: 0
-  timeout: 10000
-  lettuce:
-    pool:
-      max-active: 8
-      max-idle: 8
-      min-idle: 0
-      max-wait: -1
-
-# JWT 설정
-jwt:
-  secret: your-jwt-secret-key-here-make-it-long-and-secure
-  access-token-validity-in-seconds: 3600
-  refresh-token-validity-in-seconds: 86400
-
 # AWS 설정
 aws:
   s3:
@@ -82,3 +100,4 @@ api:
 server:
   address: 0.0.0.0
   port: 8080  # 필요에 따라 포트 설정
+  shutdown: graceful

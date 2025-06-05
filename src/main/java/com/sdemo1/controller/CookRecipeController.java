@@ -41,14 +41,12 @@ public class CookRecipeController {
         try {
             List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByUserId(userId);
             return new ApiResponse<>(
-                true,
                 null,
                 recipes,
                 HttpStatus.OK
             );
         } catch (Exception e) {
             return new ApiResponse<>(
-                false,
                 e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST
@@ -61,14 +59,12 @@ public class CookRecipeController {
         try {
             List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByCookId(cookId);
             return new ApiResponse<>(
-                true,
                 null,
                 recipes,
                 HttpStatus.OK
             );
         } catch (Exception e) {
             return new ApiResponse<>(
-                false,
                 e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST
@@ -83,14 +79,12 @@ public class CookRecipeController {
         try {
             cookRecipeService.updateRecipe(cookId, request);
             return new ApiResponse<>(
-                true,
                 "레시피가 성공적으로 업데이트되었습니다.",
                 null,
                 HttpStatus.OK
             );
         } catch (Exception e) {
             return new ApiResponse<>(
-                false,
                 "레시피 업데이트 실패하였습니다: " + e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST
@@ -108,14 +102,12 @@ public class CookRecipeController {
         try {
             cookRecipeService.deleteRecipe(cookId);
             return new ApiResponse<>(
-                true,
                 "레시피가 성공적으로 삭제되었습니다.",
                 null,
                 HttpStatus.OK
             );
         } catch (Exception e) {
             return new ApiResponse<>(
-                false,
                 "레시피 삭제 실패하였습니다: " + e.getMessage(),
                 null,
                 HttpStatus.BAD_REQUEST

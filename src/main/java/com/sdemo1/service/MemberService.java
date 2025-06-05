@@ -20,7 +20,7 @@ public class MemberService {
 
     public int createMember() {
         Member member = new Member();
-        member.setUserName("");
+        member.setName("");
         member.setUserLoginId("");
         member.setUserLoginPw("");
         Member savedMember = memberRepository.save(member);

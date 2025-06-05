@@ -60,15 +60,14 @@ public class FileUploadController {
     }
 
     @PostMapping({"/upload-recipe"})
-    public ApiResponse<String> uploadRecipe(@RequestPart(value = "recipe",required = false) RecipeDto recipeDto, @RequestParam("files") List<MultipartFile> files) {
+    public ApiResponse<?> uploadRecipe(@RequestPart(value = "recipe",required = false) RecipeDto recipeDto, @RequestParam("files") List<MultipartFile> files) {
         System.out.println("=====================");
         System.out.println(recipeDto);
         if (recipeDto.getSteps() != null && !recipeDto.getSteps().isEmpty() && ValidateUtils.isValidParam(recipeDto.getTitle()) && ValidateUtils.isValidParam(recipeDto.getUserID())) {
             try {
-                List<String> uploadedUrls = new ArrayList();
+                List<String> uploadedUrls = new ArrayList<String>();
 
                 for(int i = 0; i < recipeDto.getSteps().size(); ++i) {
-                    RecipeStepDto var10000 = (RecipeStepDto)recipeDto.getSteps().get(i);
                     MultipartFile file = (MultipartFile)files.get(i);
                     UUID var11 = UUID.randomUUID();
                     String fileName = var11 + "-" + file.getOriginalFilename();
@@ -78,7 +77,7 @@ public class FileUploadController {
                     System.out.println("fileURL : " + fileUrl);
                 }
 
-                return new ApiResponse(true, "레시피 업로드 성공!", (Object)null, HttpStatus.OK);
+                return new ApiResponse<>( "레시피 업로드 성공!", null, HttpStatus.OK);
             } catch (IOException var9) {
                 throw new CustomException("파일 업로드 실패: " + var9.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value());
             } catch (Exception var10) {
@@ -90,9 +89,9 @@ public class FileUploadController {
     }
 
     @PostMapping({"/upload-single"})
-    public ApiResponse<String> uploadSingleFile(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<?> uploadSingleFile(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return new ApiResponse(false, "File is empty", (Object)null, HttpStatus.BAD_REQUEST);
+            return new ApiResponse<>( "File is empty", null, HttpStatus.BAD_REQUEST);
         } else {
             String uploadDir = System.getProperty("user.dir") + "/uploads/";
             File dir = new File(uploadDir);
@@ -103,9 +102,9 @@ public class FileUploadController {
             try {
                 String filePath = uploadDir + file.getOriginalFilename();
                 file.transferTo(new File(filePath));
-                return new ApiResponse(true, "File uploaded successfully: " + filePath, (Object)null, HttpStatus.OK);
+                return new ApiResponse<>( "File uploaded successfully: " + filePath, null, HttpStatus.OK);
             } catch (IOException var5) {
-                return new ApiResponse(false, "Failed to upload file: " + var5.getMessage(), (Object)null, HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ApiResponse<>( "Failed to upload file: " + var5.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
             }
         }
     }
@@ -118,7 +117,7 @@ public class FileUploadController {
             String bucketPath = this.recipeFolder + "/" + userId.toString() +"/"+ var10000;
             S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(DefaultCredentialsProvider.create()).build();
 
-            ApiResponse var10;
+            ApiResponse<Map<String, String>> var10;
             try {
                 PutObjectRequest objectRequest = (PutObjectRequest)PutObjectRequest.builder().bucket(this.bucketName).key(bucketPath).contentType(contentType).build();
                 PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(10L)).putObjectRequest(objectRequest).build();
@@ -127,7 +126,7 @@ public class FileUploadController {
                 response.put("presignedUrl", presignedRequest.url().toString());
                 response.put("fileUrl", String.format("https://%s.s3.%s.amazonaws.com/%s", this.bucketName, this.region, bucketPath));
                 presigner.close();
-                var10 = new ApiResponse(true, "Presigned URL 생성 성공", response, HttpStatus.OK);
+                var10 = new ApiResponse <Map<String, String>>("Presigned URL 생성 성공", response, HttpStatus.OK);
             } catch (Throwable var12) {
                 if (presigner != null) {
                     try {
@@ -153,7 +152,7 @@ public class FileUploadController {
     @PostMapping({"/get-presigned-urls"})
     public ApiResponse<List<Map<String, String>>> getPresignedUrls(@RequestParam("userId") Integer userId, @RequestParam("count") int count, @RequestParam("contentType") String contentType) {
         try {
-            List<Map<String, String>> presignedUrls = new ArrayList();
+            List<Map<String, String>> presignedUrls = new ArrayList<>();
             S3Presigner presigner = S3Presigner.builder().region(Region.of(this.region)).credentialsProvider(DefaultCredentialsProvider.create()).build();
 
             try {
@@ -165,7 +164,7 @@ public class FileUploadController {
                     PutObjectRequest objectRequest = (PutObjectRequest)PutObjectRequest.builder().bucket(this.bucketName).key(bucketPath).contentType(contentType).build();
                     PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(10L)).putObjectRequest(objectRequest).build();
                     PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(presignRequest);
-                    Map<String, String> urlInfo = new HashMap();
+                    Map<String, String> urlInfo = new HashMap<>();
                     urlInfo.put("presignedUrl", presignedRequest.url().toString());
                     urlInfo.put("fileUrl", String.format("https://%s.s3.%s.amazonaws.com/%s", this.bucketName, this.region, bucketPath));
                     presignedUrls.add(urlInfo);
@@ -186,7 +185,7 @@ public class FileUploadController {
                 presigner.close();
             }
 
-            return new ApiResponse(true, "Presigned URLs 생성 성공", presignedUrls, HttpStatus.OK);
+            return new ApiResponse<List<Map<String, String>>>("Presigned URLs 생성 성공", presignedUrls, HttpStatus.OK);
         } catch (Exception var15) {
             throw new CustomException("Presigned URLs 생성 실패: " + var15.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value());
         }

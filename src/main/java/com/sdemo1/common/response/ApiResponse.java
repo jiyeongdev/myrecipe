@@ -5,28 +5,22 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
-    private boolean success;
     private String message;
     private T data;
     private int statusCode;
 
-    public ApiResponse(boolean success, String message, T data, HttpStatus status) {
-        this.success = success;
+    public ApiResponse(String message, T data, HttpStatus status) {
         this.message = message;
         this.statusCode = status.value();
         this.data = data;
     }
     
     public static <T> ApiResponse<T> success(T data) {
-        return new ApiResponse<>(true, null, data, HttpStatus.OK);
+        return new ApiResponse<>(null, data, HttpStatus.OK);
     }
     
     public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, message, null, HttpStatus.BAD_REQUEST);
-    }
-
-    public boolean isSuccess() {
-        return success;
+        return new ApiResponse<>(message, null, HttpStatus.BAD_REQUEST);
     }
 
     public String getMessage() {

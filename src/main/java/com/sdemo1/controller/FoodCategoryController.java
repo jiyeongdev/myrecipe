@@ -34,7 +34,7 @@ public class FoodCategoryController {
     public ApiResponse<List<FoodItem>> getMainIngredient(){
         List<FoodItem> foodItems = foodService.findByParentIDIn(Arrays.asList("P","R"));
         System.out.println("대분류 : " + foodItems);
-        return new ApiResponse<>(true, "성공", foodItems, HttpStatus.OK);
+        return new ApiResponse<>( "성공", foodItems, HttpStatus.OK);
     }
 
     @GetMapping("/allCategory")
@@ -70,14 +70,14 @@ public class FoodCategoryController {
                 })
                 .collect(Collectors.toList());
 
-        return new ApiResponse<>(true, "성공", result, HttpStatus.OK);
+        return new ApiResponse<>( null, result, HttpStatus.OK);
     }
 
     @GetMapping("/sub-ingredient") //사용하진 않으나 그냥 테스트용
     public ApiResponse<List<FoodItem>> getSubIngredient(@RequestParam("parentID") String parentID){
         List<FoodItem> foodItems = foodService.GetByParentID(parentID);
         System.out.println("parentID : " + parentID +" 에 대한 하위분류 "+foodItems);
-        return new ApiResponse<>(true, "성공", foodItems, HttpStatus.OK);
+        return new ApiResponse<>( null, foodItems, HttpStatus.OK);
     }
 
     // 재료선택 화면 API
@@ -88,7 +88,7 @@ public class FoodCategoryController {
             @RequestParam(name = "size", required = false) Integer size) {
         
         params.setPageRequest(new PageRequestDto(page, size));
-        return new ApiResponse<>(true, "성공", foodService.findIngredientByFilter(params), HttpStatus.OK);
+        return new ApiResponse<>( null, foodService.findIngredientByFilter(params), HttpStatus.OK);
     }
 
     @GetMapping("/search/{keyword}")
@@ -99,6 +99,6 @@ public class FoodCategoryController {
         
         PageRequestDto pageRequest = new PageRequestDto(page, size);
         Page<FoodItem> foodItems = foodService.findByFoodName(keyword, pageRequest);
-        return new ApiResponse<>(true, "성공", foodItems, HttpStatus.OK);
-    }
+        return new ApiResponse<>( null, foodItems, HttpStatus.OK);
+    } 
 } 

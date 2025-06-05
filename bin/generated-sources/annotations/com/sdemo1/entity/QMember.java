@@ -21,15 +21,25 @@ public class QMember extends EntityPathBase<Member> {
 
     public final DateTimePath<java.sql.Timestamp> createdAt = createDateTime("createdAt", java.sql.Timestamp.class);
 
+    public final StringPath email = createString("email");
+
     public final DateTimePath<java.sql.Timestamp> modifiedAt = createDateTime("modifiedAt", java.sql.Timestamp.class);
+
+    public final StringPath name = createString("name");
+
+    public final StringPath profileImg = createString("profileImg");
+
+    public final EnumPath<Member.Provider> provider = createEnum("provider", Member.Provider.class);
+
+    public final StringPath providerId = createString("providerId");
+
+    public final EnumPath<Member.Role> role = createEnum("role", Member.Role.class);
 
     public final NumberPath<Integer> userId = createNumber("userId", Integer.class);
 
     public final StringPath userLoginId = createString("userLoginId");
 
     public final StringPath userLoginPw = createString("userLoginPw");
-
-    public final StringPath userName = createString("userName");
 
     public QMember(String variable) {
         super(Member.class, forVariable(variable));
