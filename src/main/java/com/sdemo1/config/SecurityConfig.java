@@ -44,7 +44,7 @@ public class SecurityConfig {
             })
             .authorizeHttpRequests(auth -> {
                 log.info("인증 요구사항 설정");
-                auth.requestMatchers("/", "/login/**", "/oauth2/**", "/health-check", "/auth/**").permitAll()
+                auth.requestMatchers("/", "/login/**", "/oauth2/**", "/health-check", "/api/auth/**").permitAll()
                     .anyRequest().authenticated();
             })
             .exceptionHandling(exception -> {
