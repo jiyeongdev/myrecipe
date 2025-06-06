@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth/google")
+@RequestMapping("/ck/auth/google")
 @RequiredArgsConstructor
 public class GoogleAuthController {
 
