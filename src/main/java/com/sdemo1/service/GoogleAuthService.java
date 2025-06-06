@@ -134,8 +134,9 @@ public class GoogleAuthService {
         final String userLoginId = (email == null || email.trim().isEmpty()) ? "google_" + sub : email;
         final String userName = (name != null) ? name : "Google User";
 
-        Member member = memberRepository.findByUserLoginId(userLoginId)
+        return memberRepository.findByUserLoginId(userLoginId)
                 .orElseGet(() -> {
+                    log.info("새로운 사용자 생성: {}", userLoginId);
                     Member newMember = new Member();
                     newMember.setUserLoginId(userLoginId);
                     newMember.setName(userName);
@@ -144,9 +145,7 @@ public class GoogleAuthService {
                     newMember.setProviderId(sub);
                     newMember.setProfileImg(picture);
                     newMember.setUserLoginPw("OAUTH2_USER");
-                    return newMember;
+                    return memberRepository.save(newMember);
                 });
-
-        return memberRepository.save(member);
     }
 } 
