@@ -39,6 +39,7 @@ spring:
             scope:
               - email
               - profile
+              - openid
         provider:
           google:
             authorization-uri: https://accounts.google.com/o/oauth2/auth
