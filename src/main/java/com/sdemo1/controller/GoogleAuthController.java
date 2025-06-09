@@ -9,14 +9,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import jakarta.servlet.http.HttpServletResponse;
 
 @Slf4j
 @RestController
@@ -39,12 +39,54 @@ public class GoogleAuthController {
         }
     }
 
+    private String extractCodeFromUrl(String url) {
+        try {
+            URI uri = new URI(url);
+            String query = uri.getQuery();
+            if (query != null) {
+                String[] params = query.split("&");
+                for (String param : params) {
+                    String[] pair = param.split("=");
+                    if (pair.length == 2 && "code".equals(pair[0])) {
+                        return pair[1];
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("URL에서 code 파라미터 추출 실패: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    @GetMapping("/url-redirect")
+    public ResponseEntity<Void> getGoogleAuthUrl2() {
+        try {
+            log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
+            String authUrl = googleAuthService.getGoogleAuthUrl();
+            log.info("리다이렉트 URL: {}", authUrl);
+            
+            if (authUrl == null || authUrl.trim().isEmpty()) {
+                log.error("생성된 인증 URL이 유효하지 않습니다.");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+            
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(URI.create(authUrl))
+                    .build();
+        } catch (Exception e) {
+            log.error("Google OAuth URL 생성 중 오류 발생: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
     @GetMapping("/url")
-    public void getGoogleAuthUrl(HttpServletResponse response) throws IOException {
-        log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
+    public ApiResponse<?> getGoogleAuthUrl() {
+        log.info("=== Google OAuth 인증 URL 생성 시작 ===");
         String authUrl = googleAuthService.getGoogleAuthUrl();
-        log.info("리다이렉트 URL: {}", authUrl);
-        response.sendRedirect(authUrl);
+        String code = extractCodeFromUrl(authUrl);        
+        log.info("생성된 인증 URL: {}", authUrl);
+        log.info("구글인가코드: {}", code);
+        return new ApiResponse<>("Google 인증 URL 생성 완료", authUrl, HttpStatus.OK);
     }
 
     @PostMapping("/token")
