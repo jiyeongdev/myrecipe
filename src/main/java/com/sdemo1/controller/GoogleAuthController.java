@@ -58,8 +58,8 @@ public class GoogleAuthController {
         return null;
     }
 
-    @GetMapping("/url-redirect")
-    public ResponseEntity<Void> getGoogleAuthUrl2() {
+    @GetMapping("/url")
+    public ResponseEntity<Void> getGoogleAuthUrl() {
         try {
             log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
             String authUrl = googleAuthService.getGoogleAuthUrl();
@@ -79,8 +79,8 @@ public class GoogleAuthController {
         }
     }
 
-    @GetMapping("/url")
-    public ApiResponse<?> getGoogleAuthUrl() {
+    @GetMapping("/url-str")
+    public ApiResponse<?> getGoogleAuthUrlStr() {
         log.info("=== Google OAuth 인증 URL 생성 시작 ===");
         String authUrl = googleAuthService.getGoogleAuthUrl();
         String code = extractCodeFromUrl(authUrl);        
