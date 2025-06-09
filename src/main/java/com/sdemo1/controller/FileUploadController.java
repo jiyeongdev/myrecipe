@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.common.utils.ValidateUtils;
 import com.sdemo1.dto.RecipeDto;
-import com.sdemo1.dto.RecipeStepDto;
 import com.sdemo1.exception.CustomException;
 
 import jakarta.annotation.PostConstruct;
@@ -122,7 +121,7 @@ public class FileUploadController {
                 PutObjectRequest objectRequest = (PutObjectRequest)PutObjectRequest.builder().bucket(this.bucketName).key(bucketPath).contentType(contentType).build();
                 PutObjectPresignRequest presignRequest = PutObjectPresignRequest.builder().signatureDuration(Duration.ofMinutes(10L)).putObjectRequest(objectRequest).build();
                 PresignedPutObjectRequest presignedRequest = presigner.presignPutObject(presignRequest);
-                Map<String, String> response = new HashMap();
+                Map<String, String> response = new HashMap<>();
                 response.put("presignedUrl", presignedRequest.url().toString());
                 response.put("fileUrl", String.format("https://%s.s3.%s.amazonaws.com/%s", this.bucketName, this.region, bucketPath));
                 presigner.close();

@@ -32,7 +32,7 @@ public class GoogleAuthService {
 
     public String getGoogleAuthUrl() {
         try {
-            log.info("=== Google OAuth URL 생성 시작 ===");
+            log.info("=== Google 인가코드 URL 생성 시작 ===");
             log.info("Client ID: {}", clientId);
             log.info("Redirect URI: {}", redirectUri);
             
@@ -46,10 +46,10 @@ public class GoogleAuthService {
                 scope
             );
             
-            log.info("생성된 URL: {}", url);
+            log.info("생성된 인가코드 URL: {}", url);
             return url;
         } catch (Exception e) {
-            log.error("Google OAuth URL 생성 중 오류 발생: {}", e.getMessage(), e);
+            log.error("Google 인가코드 URL 생성 중 오류 발생: {}", e.getMessage(), e);
             throw new RuntimeException("Google OAuth URL 생성 실패", e);
         }
     }
