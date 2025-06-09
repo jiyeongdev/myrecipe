@@ -12,6 +12,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -71,14 +73,10 @@ public class GoogleAuthService {
         // 요청 본문 설정
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("code", authorizationCode);
-        body.add("client_id", "9472329979-3t1bldmdhhbc01pfvs4f1qgjqbn7n405.apps.googleusercontent.com");
-        body.add("client_secret", "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");
-        body.add("redirect_uri", "https://fridgepal.life/api/google-callback");
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("redirect_uri", redirectUri);
         body.add("grant_type", "authorization_code");
-        // body.add("client_id", clientId);
-        // body.add("client_secret", clientSecret);
-        // body.add("redirect_uri", redirectUri);
-        // body.add("grant_type", "authorization_code");
 
         
         // 요청 생성
@@ -152,7 +150,7 @@ public class GoogleAuthService {
         }
     }
 
-    public Member saveOrUpdateGoogleUser(Map<String, Object> userInfo) {
+    public Map<String, Object> saveOrUpdateGoogleUser(Map<String, Object> userInfo) {
         log.info("=== Google 사용자 정보 저장/업데이트 시작 ===");
         log.info("사용자 정보: {}", userInfo);
 
@@ -165,7 +163,8 @@ public class GoogleAuthService {
         final String userLoginId = (email == null || email.trim().isEmpty()) ? "google_" + sub : email;
         final String userName = (name != null) ? name : "Google User";
 
-        return memberRepository.findByUserLoginId(userLoginId)
+        AtomicBoolean isNewUser = new AtomicBoolean(false);
+        Member member = memberRepository.findByEmail(userLoginId)
                 .orElseGet(() -> {
                     log.info("새로운 사용자 생성: {}", userLoginId);
                     Member newMember = new Member();
@@ -176,7 +175,15 @@ public class GoogleAuthService {
                     newMember.setProviderId(sub);
                     newMember.setProfileImg(picture);
                     newMember.setUserLoginPw("OAUTH2_USER");
+                    isNewUser.set(true);
                     return memberRepository.save(newMember);
                 });
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("member", member);
+        result.put("isNewUser", isNewUser.get());
+        result.put("userInfo", userInfo);  // JWT 토큰 생성에 필요한 정보도 함께 전달
+
+        return result;
     }
 } 

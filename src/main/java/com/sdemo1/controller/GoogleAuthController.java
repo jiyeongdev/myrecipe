@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.HashMap;
 
 
 @Slf4j
@@ -91,37 +92,41 @@ public class GoogleAuthController {
 
     @PostMapping("/token")
     public ApiResponse<?> getGoogleToken(@RequestBody Map<String, String> request) {
-        log.info("=== Google OAuth 토큰 요청 시작 ===");
-        log.info("요청 데이터: {}", request);
-        
         try {
-            String code = request.get("code");
-            String decodedCode = decodeAuthorizationCode(code);
-            
-            // Google OAuth2 토큰 획득
-            String accessToken = googleAuthService.getGoogleAccessToken(decodedCode);
-            log.info("Google Access Token 획득 성공");
-            
-            // Google 사용자 정보 획득
-            Map<String, Object> userInfo = googleAuthService.getGoogleUserInfo(accessToken);
-            log.info("사용자 정보: {}", userInfo);
+            log.info("=== Google OAuth 토큰 요청 시작 ===");
+            String code1 = request.get("code");
+            String code = decodeAuthorizationCode(code1);
+            log.info("인가코드: {}", code);
 
-            // 사용자 정보 저장 또는 업데이트
-            Member member = googleAuthService.saveOrUpdateGoogleUser(userInfo);
-            log.info("사용자 정보 저장/업데이트 완료: {}", member.getUserLoginId());
-            
+            // Google Access Token 요청
+            String googleAccessToken = googleAuthService.getGoogleAccessToken(code);
+            log.info("Google Access Token: {}", googleAccessToken);
+
+            // Google 사용자 정보 요청
+            Map<String, Object> userInfo = googleAuthService.getGoogleUserInfo(googleAccessToken);
+            log.info("Google 사용자 정보: {}", userInfo);
+
+            // 사용자 정보 저장/업데이트
+            Map<String, Object> result = googleAuthService.saveOrUpdateGoogleUser(userInfo);
+            Member member = (Member) result.get("member");
+            boolean isNewUser = (boolean) result.get("isNewUser");
+            Map<String, Object> tokenUserInfo = (Map<String, Object>) result.get("userInfo");
+
             // JWT 토큰 생성
-            String jwtToken = jwtTokenProvider.createAccessToken(userInfo);
-            log.info("JWT 토큰 생성 완료 : {}", jwtToken);
-            
-            return new ApiResponse<>("JWT 토큰 생성 완료!", jwtToken, HttpStatus.OK);
+            String jwtAccessToken = jwtTokenProvider.createAccessToken(tokenUserInfo);
+            String jwtRefreshToken = jwtTokenProvider.createRefreshToken(tokenUserInfo);
+            log.info("JWT 토큰 생성 완료");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("member", member);
+            response.put("isNewUser", isNewUser);
+            response.put("accessToken", jwtAccessToken);
+            response.put("refreshToken", jwtRefreshToken);
+
+            return new ApiResponse<>("Google 로그인 성공", response, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Google OAuth 처리 중 오류 발생: {}", e.getMessage(), e);
-            throw new CustomException(
-                "인증 처리 중 오류가 발생했습니다",
-                e.getMessage(),
-                HttpStatus.BAD_REQUEST.value()
-            );
+            log.error("Google OAuth 토큰 요청 실패: {}", e.getMessage(), e);
+            return new ApiResponse<>("Google 로그인 실패: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 } 
