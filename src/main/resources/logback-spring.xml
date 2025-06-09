@@ -13,14 +13,14 @@
     </appender>
 
     <!-- CloudWatch 출력용 appender -->
-    <appender name="CLOUDWATCH" class="ca.pjer.logback.AwsLogsAppender">
+    <!-- <appender name="CLOUDWATCH" class="ca.pjer.logback.AwsLogsAppender">
         <encoder>
             <pattern>${SQL_PATTERN_SINGLE_LINE}</pattern>
         </encoder>
         <logGroupName>/myrecipe/application</logGroupName>
         <logStreamName>${HOSTNAME}</logStreamName>
         <region>ap-northeast-3</region>
-    </appender>
+    </appender> -->
 
     <!-- SQL 로그만 별도로 출력 -->
     <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">

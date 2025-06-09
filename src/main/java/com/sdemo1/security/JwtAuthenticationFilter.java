@@ -23,12 +23,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
+        /** 배지영
+         *  String path = request.getRequestURI();
         // JWT 토큰이 필요하지 않은 경로들
         return path.startsWith("/auth/") || 
-               path.startsWith("/oauth2/") || 
                path.startsWith("/login/") ||
+               path.startsWith("/ck/auth/") ||
                path.equals("/health-check");
+         */
+        return true;  // 모든 요청에 대해 필터링하지 않음
     }
 
     @Override

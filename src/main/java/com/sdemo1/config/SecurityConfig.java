@@ -44,16 +44,24 @@ public class SecurityConfig {
             })
             .authorizeHttpRequests(auth -> {
                 log.info("인증 요구사항 설정");
-                auth.requestMatchers("/", "/login/**", "/oauth2/**", "/health-check", "/ck/auth/**").permitAll()
-                    .anyRequest().authenticated();
+                auth.anyRequest().permitAll();  // 모든 요청 허용
+
+                //배지영
+                //auth.requestMatchers("/", "/login/**", "/health-check", "/ck/auth/**").permitAll()
+                //.anyRequest().authenticated();
             })
             .exceptionHandling(exception -> {
                 log.info("예외 처리 설정");
                 exception.authenticationEntryPoint((request, response, authException) -> {
                     log.error("인증 실패: {}", authException.getMessage());
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                    response.setContentType("application/json;charset=UTF-8");
+                    String errorMessage = String.format(
+                        "{\"error\": \"Unauthorized\", \"message\": \"%s\", \"path\": \"%s\"}",
+                        authException.getMessage(),
+                        request.getRequestURI()
+                    );
+                    response.getWriter().write(errorMessage);
                 });
             })
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -68,6 +76,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
             "http://localhost:3000",  // 개발 환경
+            "https://fridgepal.life",     
             "https://www.fridgepal.life"  // 배포된 프론트엔드 도메인
         ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
