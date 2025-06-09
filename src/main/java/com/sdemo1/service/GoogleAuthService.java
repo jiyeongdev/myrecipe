@@ -30,9 +30,20 @@ public class GoogleAuthService {
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
 
-    public String getGoogleAccessToken(String authorizationCode) {
-        log.info("=== Google OAuth 토큰 요청 시작 ===");
-        log.info("=== Google OAuth 토큰 요청 시작 ===");
+    public String getGoogleAuthUrl() {
+        String authUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+        String scope = "openid profile email";
+        
+        return String.format("%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
+            authUrl,
+            clientId,
+            redirectUri,
+            scope
+        );
+    }
+
+    public String getGoogleAuthCode(String authorizationCode) {
+        log.info("=== Google OAuth 인가 코드 발급 요청 시작 ===");
         log.info("=== Client ID: {}", clientId);
         log.info("=== Client Secret: {}", clientSecret);
         log.info("=== Redirect URI: {}", redirectUri);
@@ -47,11 +58,11 @@ public class GoogleAuthService {
         
         // 요청 본문 설정
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("code", authorizationCode);
         body.add("client_id", clientId);
-        body.add("client_secret", clientSecret);
+        body.add("scope", "openid profile email");
         body.add("redirect_uri", redirectUri);
-        body.add("grant_type", "authorization_code");
+        body.add("response_type", "code");
+
         
         // 요청 생성
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
@@ -75,14 +86,17 @@ public class GoogleAuthService {
                 request,
                 Map.class
             );
-            log.info("Token Response: {}", response.getBody());
+            log.info("Token Response: {}", response.getBody());                    log.info("token Status Code: {}", response.getStatusCode());
+            log.info("token Headers: {}", response.getHeaders());
+            log.info("token Body: {}", response.getBody());
+
+            
             // 응답에서 액세스 토큰 추출
             String accessToken = (String) response.getBody().get("access_token");
             log.info("Google OAuth 토큰 획득 성공");
             return accessToken;
             
         } catch (Exception e) {
-            log.error("Google OAuth 토큰 요청 실패: {}", e.getMessage());
             String errorMessage;
             if (e.getMessage().contains("invalid_grant")) {
                 errorMessage = "인증 코드가 만료되었거나 이미 사용되었습니다. 새로운 인증 코드를 요청해주세요.";
@@ -91,7 +105,82 @@ public class GoogleAuthService {
                 errorMessage = "redirect_uri 이 일치하지 않습니다. 확인해주세요.";
                 log.error(errorMessage);
             } else {
-                errorMessage = "Google OAuth 토큰 요청 실패: " + e.getMessage();
+                errorMessage = "Google OAuth 토큰 요청 중 알 수 없는 오류: " + e.getMessage();
+                log.error(errorMessage, e);
+            }
+            throw new RuntimeException(errorMessage);
+        }
+    }
+
+    public String getGoogleAccessToken(String authorizationCode) {
+        log.info("=== Google OAuth 토큰 요청 시작 ===");
+        log.info("=== Client ID: {}", clientId);
+        log.info("=== Client Secret: {}", clientSecret);
+        log.info("=== Redirect URI: {}", redirectUri);
+        log.info("=== Authorization Code: {}", authorizationCode);
+        
+
+        String tokenUrl = "https://oauth2.googleapis.com/token";
+        
+        // 요청 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        
+        // 요청 본문 설정
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("code", authorizationCode);
+        body.add("client_id", "9472329979-3t1bldmdhhbc01pfvs4f1qgjqbn7n405.apps.googleusercontent.com");
+        body.add("client_secret", "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");
+        body.add("redirect_uri", "https://fridgepal.life/api/google-callback");
+        body.add("grant_type", "authorization_code");
+        // body.add("client_id", clientId);
+        // body.add("client_secret", clientSecret);
+        // body.add("redirect_uri", redirectUri);
+        // body.add("grant_type", "authorization_code");
+
+        
+        // 요청 생성
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        
+        // 요청 정보 상세 로깅
+        log.info("=== 토큰 요청 상세 정보 ===");
+        log.info("요청 URL: {}", tokenUrl);
+        log.info("요청 헤더: {}", headers);
+        log.info("요청 바디: {}", body);
+        log.info("최종 요청 URL (바디 포함): {}?{}", tokenUrl, 
+            body.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue().get(0))
+                .reduce((a, b) -> a + "&" + b)
+                .orElse(""));
+        
+        try {
+            //토큰 요청
+            ResponseEntity<Map> response = restTemplate.exchange(
+                tokenUrl,
+                HttpMethod.POST,
+                request,
+                Map.class
+            );
+            log.info("Token Response: {}", response.getBody());                    log.info("token Status Code: {}", response.getStatusCode());
+            log.info("token Headers: {}", response.getHeaders());
+            log.info("token Body: {}", response.getBody());
+
+            
+            // 응답에서 액세스 토큰 추출
+            String accessToken = (String) response.getBody().get("access_token");
+            log.info("Google OAuth 토큰 획득 성공");
+            return accessToken;
+            
+        } catch (Exception e) {
+            String errorMessage;
+            if (e.getMessage().contains("invalid_grant")) {
+                errorMessage = "인증 코드가 만료되었거나 이미 사용되었습니다. 새로운 인증 코드를 요청해주세요.";
+                log.error(errorMessage);
+            } else if (e.getMessage().contains("redirect_uri_mismatch")) {
+                errorMessage = "redirect_uri 이 일치하지 않습니다. 확인해주세요.";
+                log.error(errorMessage);
+            } else {
+                errorMessage = "Google OAuth 토큰 요청 중 알 수 없는 오류: " + e.getMessage();
                 log.error(errorMessage, e);
             }
             throw new RuntimeException(errorMessage);

@@ -11,9 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 @Slf4j
 @RestController
@@ -34,6 +37,14 @@ public class GoogleAuthController {
             log.error("인증 코드 디코딩 실패: {}", e.getMessage());
             throw new RuntimeException("인증 코드 디코딩 실패", e);
         }
+    }
+
+    @GetMapping("/url")
+    public void getGoogleAuthUrl(HttpServletResponse response) throws IOException {
+        log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
+        String authUrl = googleAuthService.getGoogleAuthUrl();
+        log.info("리다이렉트 URL: {}", authUrl);
+        response.sendRedirect(authUrl);
     }
 
     @PostMapping("/token")
