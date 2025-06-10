@@ -2,13 +2,14 @@ package com.sdemo1.controller;
 
 import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.entity.Member;
-import com.sdemo1.exception.CustomException;
 import com.sdemo1.security.JwtTokenProvider;
 import com.sdemo1.service.GoogleAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.HashMap;
 
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @RestController
@@ -27,6 +29,24 @@ public class GoogleAuthController {
 
     private final GoogleAuthService googleAuthService;
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${jwt.cookie.refresh-token.name}")
+    private String refreshTokenCookieName;
+
+    @Value("${jwt.cookie.refresh-token.http-only}")
+    private boolean refreshTokenHttpOnly;
+
+    @Value("${jwt.cookie.refresh-token.secure}")
+    private boolean refreshTokenSecure;
+
+    @Value("${jwt.cookie.refresh-token.path}")
+    private String refreshTokenPath;
+
+    @Value("${jwt.cookie.refresh-token.max-age}")
+    private int refreshTokenMaxAge;
+
+    @Value("${jwt.cookie.refresh-token.same-site}")
+    private String refreshTokenSameSite;
 
     private String decodeAuthorizationCode(String code) {
         log.info("원본 인증 코드: {}", code);
@@ -59,12 +79,15 @@ public class GoogleAuthController {
         return null;
     }
 
-    @GetMapping("/url")
-    public ResponseEntity<Void> getGoogleAuthUrl() {
+    @GetMapping("/auth-url")
+    public ResponseEntity<Void> getGoogleAuthUrl(@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
         try {
             log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
+            googleAuthService.setRedirectUri(redirectUri);
+            log.info("현재 Redirect URI: {}", googleAuthService.getRedirectUri());
+
             String authUrl = googleAuthService.getGoogleAuthUrl();
-            log.info("리다이렉트 URL: {}", authUrl);
+            log.info("구글인가코드 생성 URL: {}", authUrl);
             
             if (authUrl == null || authUrl.trim().isEmpty()) {
                 log.error("생성된 인증 URL이 유효하지 않습니다.");
@@ -80,19 +103,24 @@ public class GoogleAuthController {
         }
     }
 
-    @GetMapping("/url-str")
-    public ApiResponse<?> getGoogleAuthUrlStr() {
+    @GetMapping("/auth-url-str")
+    public ApiResponse<?> getGoogleAuthUrlStr(@RequestParam(value = "redirect_uri", required = false) String redirectUri) {
         log.info("=== Google OAuth 인증 URL 생성 시작 ===");
+        googleAuthService.setRedirectUri(redirectUri);
+        log.info("현재 Redirect URI: {}", googleAuthService.getRedirectUri());
+
         String authUrl = googleAuthService.getGoogleAuthUrl();
-        String code = extractCodeFromUrl(authUrl);        
         log.info("생성된 인증 URL: {}", authUrl);
-        log.info("구글인가코드: {}", code);
         return new ApiResponse<>("Google 인증 URL 생성 완료", authUrl, HttpStatus.OK);
     }
 
     @PostMapping("/token")
-    public ApiResponse<?> getGoogleToken(@RequestBody Map<String, String> request) {
+    public ResponseEntity<ApiResponse<?>> getGoogleToken(@RequestBody Map<String, String> request) {
         try {
+
+            log.info("currentRedirectUri Redirect URI: {}", googleAuthService.getRedirectUri());
+
+            
             log.info("=== Google OAuth 토큰 요청 시작 ===");
             String code1 = request.get("code");
             String code = decodeAuthorizationCode(code1);
@@ -108,7 +136,7 @@ public class GoogleAuthController {
 
             // 사용자 정보 저장/업데이트
             Map<String, Object> result = googleAuthService.saveOrUpdateGoogleUser(userInfo);
-            Member member = (Member) result.get("member");
+            // Member member = (Member) result.get("member");
             boolean isNewUser = (boolean) result.get("isNewUser");
             Map<String, Object> tokenUserInfo = (Map<String, Object>) result.get("userInfo");
 
@@ -118,15 +146,25 @@ public class GoogleAuthController {
             log.info("JWT 토큰 생성 완료");
 
             Map<String, Object> response = new HashMap<>();
-            response.put("member", member);
+            // response.put("member", member);
             response.put("isNewUser", isNewUser);
             response.put("accessToken", jwtAccessToken);
-            response.put("refreshToken", jwtRefreshToken);
 
-            return new ApiResponse<>("Google 로그인 성공", response, HttpStatus.OK);
+            // Refresh Token을 HTTP-Only 쿠키로 설정
+            ResponseCookie refreshTokenCookie = ResponseCookie.from(refreshTokenCookieName, jwtRefreshToken)
+                    .httpOnly(refreshTokenHttpOnly)
+                    .secure(refreshTokenSecure)
+                    .path(refreshTokenPath)
+                    .maxAge(refreshTokenMaxAge)
+                    .sameSite(refreshTokenSameSite)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                    .body(new ApiResponse<>("Google 로그인 성공", response, HttpStatus.OK));
         } catch (Exception e) {
             log.error("Google OAuth 토큰 요청 실패: {}", e.getMessage(), e);
-            return new ApiResponse<>("Google 로그인 실패: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResponse<>("Google 로그인 실패: " + e.getMessage(), null, HttpStatus.INTERNAL_SERVER_ERROR), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 } 

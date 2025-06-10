@@ -32,6 +32,7 @@ public class JwtTokenProvider {
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-validity-in-seconds}") long accessTokenValidityInSeconds,
             @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValidityInSeconds,
+            @Value("${jwt.admin-token-validity-in-seconds:31536000}") long adminTokenValidityInSeconds,
             @Value("${jwt.admin-token}") String adminToken,
             MemberRepository memberRepository) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());

@@ -66,13 +66,18 @@ redis:
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET}
-  # access-token-validity-in-seconds: 3600    # 1시간 (3600초)
-  # refresh-token-validity-in-seconds: 86400  # 24시간 (86400초)
-  # expiration: 86400000 # 24시간
-  access-token-validity-in-seconds: 31536000    # 1년 (31536000초)
-  refresh-token-validity-in-seconds: 31536000  # 1년 (31536000초)
-  expiration: 31536000000 # 1년
+  access-token-validity-in-seconds: 86400    # 24시간
+  refresh-token-validity-in-seconds: 604800  # 7일
+  admin-token-validity-in-seconds: 31536000    # 1년
   admin-token: ${ADMIN-TOKEN} # 관리자 토큰
+  cookie:
+    refresh-token:
+      name: refreshToken
+      http-only: true
+      secure: true
+      path: /
+      max-age: 604800  # 7일 (7 * 24 * 60 * 60)
+      same-site: Strict
 
 logging:
   level:

@@ -2,6 +2,7 @@ package com.sdemo1.service;
 
 import com.sdemo1.entity.Member;
 import com.sdemo1.repository.MemberRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +30,22 @@ public class GoogleAuthService {
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String redirectUri;
 
+    private String currentRedirectUri;
+
+    public void setRedirectUri(String newRedirectUri) {
+        if (newRedirectUri != null && !newRedirectUri.trim().isEmpty()) {
+            this.currentRedirectUri = newRedirectUri;
+            log.info("Redirect URI가 변경되었습니다: {}", this.currentRedirectUri);
+        } else {
+            this.currentRedirectUri = this.redirectUri;
+            log.info("Redirect URI가 기본값으로 재설정되었습니다: {}", this.currentRedirectUri);
+        }
+    }
+
+    public String getRedirectUri() {
+        return currentRedirectUri;
+    }
+
     private final RestTemplate restTemplate;
     private final MemberRepository memberRepository;
 
@@ -36,7 +53,7 @@ public class GoogleAuthService {
         try {
             log.info("=== Google 인가코드 URL 생성 시작 ===");
             log.info("Client ID: {}", clientId);
-            log.info("Redirect URI: {}", redirectUri);
+            log.info("Redirect URI: {}", currentRedirectUri);
             
             String authUrl = "https://accounts.google.com/o/oauth2/v2/auth";
             String scope = "openid%20profile%20email";  // 공백을 %20으로 인코딩
@@ -44,7 +61,7 @@ public class GoogleAuthService {
             String url = String.format("%s?client_id=%s&redirect_uri=%s&response_type=code&scope=%s",
                 authUrl,
                 clientId,
-                redirectUri,
+                currentRedirectUri,
                 scope
             );
             
@@ -60,7 +77,7 @@ public class GoogleAuthService {
         log.info("=== Google OAuth 토큰 요청 시작 ===");
         log.info("=== Client ID: {}", clientId);
         log.info("=== Client Secret: {}", clientSecret);
-        log.info("=== Redirect URI: {}", redirectUri);
+        log.info("=== currentRedirectUri URI: {}", currentRedirectUri);
         log.info("=== Authorization Code: {}", authorizationCode);
         
 
@@ -75,7 +92,7 @@ public class GoogleAuthService {
         body.add("code", authorizationCode);
         body.add("client_id", clientId);
         body.add("client_secret", clientSecret);
-        body.add("redirect_uri", redirectUri);
+        body.add("redirect_uri", currentRedirectUri);
         body.add("grant_type", "authorization_code");
 
         
@@ -101,7 +118,8 @@ public class GoogleAuthService {
                 request,
                 Map.class
             );
-            log.info("Token Response: {}", response.getBody());                    log.info("token Status Code: {}", response.getStatusCode());
+            log.info("Token Response: {}", response.getBody());
+            log.info("token Status Code: {}", response.getStatusCode());
             log.info("token Headers: {}", response.getHeaders());
             log.info("token Body: {}", response.getBody());
 
