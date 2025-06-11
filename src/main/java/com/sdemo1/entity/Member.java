@@ -5,14 +5,7 @@
 
 package com.sdemo1.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.EnumType;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @AllArgsConstructor
@@ -35,40 +29,30 @@ public class Member implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
-    private int userId;
+    @Column(name = "member_id")
+    private int memberId;
 
     @Column(name = "name")
     private String name;
 
-    @Column(name = "user_login_id", unique = true)
-    private String userLoginId;
-
-    @Column(name = "user_login_pw")
-    private String userLoginPw;
-
-    @Column(name = "email", unique = true)
-    private String email;
-
-    @Column(name = "provider")
-    @Enumerated(EnumType.STRING)
-    private Provider provider;
-
-    @Column(name = "provider_id")
-    private String providerId;
-
-    @Column(name = "profile_img")
-    private String profileImg;
+    @Column(name = "phone")
+    private String phone;
 
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private Role role = Role.USER;
+
+    @Column(name ="complete_flag")
+    private boolean completeFlag = false;
 
     @Column(name = "created_at", insertable = false, updatable = false)
     private java.sql.Timestamp createdAt;
 
     @Column(name = "modified_at", insertable = false, updatable = false)
     private java.sql.Timestamp modifiedAt;
+
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL)
+    private List<MemberSocialAccount> socialAccounts;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -77,12 +61,14 @@ public class Member implements UserDetails {
 
     @Override
     public String getPassword() {
-        return userLoginPw;
+        return socialAccounts != null && !socialAccounts.isEmpty() ? 
+            socialAccounts.get(0).getUserLoginPw() : null;
     }
 
     @Override
     public String getUsername() {
-        return userLoginId;
+        return socialAccounts != null && !socialAccounts.isEmpty() ? 
+            socialAccounts.get(0).getUserLoginId() : null;
     }
 
     @Override
@@ -105,13 +91,13 @@ public class Member implements UserDetails {
         return true;
     }
 
-    public enum Provider {
-        LOCAL,
-        GOOGLE
-    }
-
     public enum Role {
         USER,
         ADMIN
     }
+    
+    public boolean getCompleteFlag() {
+        return completeFlag;
+    }
+
 }

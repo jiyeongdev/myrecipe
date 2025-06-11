@@ -65,36 +65,16 @@ public class JwtTokenProvider {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
-        String userLoginId = getUserLoginId(userInfo);
-        Member.Role userRole = getUserRole(userLoginId);
-
         return Jwts.builder()
-                .setSubject(userLoginId)
-                .claim("email", userInfo.get("email"))
-                .claim("sub", userInfo.get("sub"))
-                .claim("auth", userRole.name())
+                .setSubject(String.valueOf(userInfo.get("memberId")))
+                .claim("memberId", userInfo.get("memberId"))
+                .claim("name", userInfo.get("name"))
+                .claim("role", userInfo.get("role"))
+                .claim("phone", userInfo.get("phone"))
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .compact();
-    }
-
-    /**
-     * 사용자 로그인 ID 생성
-     */
-    private String getUserLoginId(Map<String, Object> userInfo) {
-        String email = (String) userInfo.get("email");
-        String sub = (String) userInfo.get("sub");
-        return (email != null && !email.isEmpty()) ? email : "google_" + sub;
-    }
-
-    /**
-     * 사용자 권한 조회
-     */
-    private Member.Role getUserRole(String userLoginId) {
-        return memberRepository.findByUserLoginId(userLoginId)
-                .map(Member::getRole)
-                .orElse(Member.Role.USER);
     }
 
     /**

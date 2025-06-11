@@ -18,26 +18,12 @@ public class MemberService {
         this.memberRepository = memberRepository;
     }
 
-    public int createMember() {
-        Member member = new Member();
-        member.setName("");
-        member.setUserLoginId("");
-        member.setUserLoginPw("");
-        Member savedMember = memberRepository.save(member);
-        return savedMember.getUserId();
+    public Member createMember(Member member) {
+        return memberRepository.save(member);
     }
 
-    public int join(Member member) {
-        validateDuplicateMember(member);
-        memberRepository.save(member);
-        return member.getUserId();
-    }
-
-    private void validateDuplicateMember(Member member) {
-        memberRepository.findByUserLoginId(member.getUserLoginId())
-            .ifPresent(m -> {
-                throw new IllegalStateException("이미 존재하는 회원입니다.");
-            });
+    public Member updateMember(Member member) {
+        return memberRepository.save(member);
     }
 
     public List<Member> findMembers() {
@@ -46,5 +32,13 @@ public class MemberService {
 
     public Optional<Member> findOneById(Integer memberId) {
         return memberRepository.findById(memberId);
+    }
+
+    public Optional<Member> findByName(String name) {
+        return memberRepository.findByName(name);
+    }
+
+    public Optional<Member> findByPhone(String phone) {
+        return memberRepository.findByPhone(phone);
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -37,17 +39,33 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
-        String token = resolveToken(request);
-        log.info("JWT 토큰 추출: {}", token);
+        try {
+            log.info("=== JWT 필터 시작 ===");
+            log.info("요청 URI: {}", request.getRequestURI());
+            log.info("요청 메서드: {}", request.getMethod());
+            log.info("요청 헤더: {}", Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(
+                    headerName -> headerName,
+                    request::getHeader
+                )));
 
-        if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            log.info("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
+            String token = resolveToken(request);
+            log.info("JWT 토큰 추출: {}", token);
+
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+                log.info("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
+            } else {
+                log.info("토큰이 없거나 유효하지 않습니다");
+            }
+
+            filterChain.doFilter(request, response);
+            log.info("=== JWT 필터 종료 ===");
+        } catch (Exception e) {
+            log.error("JWT 필터 처리 중 오류 발생", e);
+            throw e;
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {
