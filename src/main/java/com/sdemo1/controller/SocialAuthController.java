@@ -72,7 +72,7 @@ public class SocialAuthController {
         return new ApiResponse<>("인증 URL 생성 완료", authUrl, HttpStatus.OK);
     }
 
-    @PostMapping("/{provider}/token")
+    @PostMapping("/{provider}/token-fake")
     public ResponseEntity<ApiResponse<?>> getSocialToken(
             @PathVariable("provider") String provider,
             @RequestBody Map<String, String> request) {
