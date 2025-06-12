@@ -10,4 +10,5 @@ import com.sdemo1.entity.RecipeStep;
 @Repository
 public interface RecipeStepRepository extends JpaRepository<RecipeStep, Integer> {
     Optional<RecipeStep> findByCookId(Integer cookId);
+    Optional<RecipeStep> findById(Integer id);
 }

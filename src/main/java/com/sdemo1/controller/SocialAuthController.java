@@ -109,14 +109,17 @@ public class SocialAuthController {
             // 사용자 정보 확인 또는 생성 후 accessToken 생성
             SocialLoginResponse response = socialAuthService.createAccessTokenByUserInfo(userInfo);
 
+
+            // Refresh Token 쿠키 생성 후 헤더에 추가
+            ResponseCookie refreshTokenCookie = refreshTokenCookieConfig.createCookie(response.refreshToken());
+            log.info("refreshTokenCookie: {}", refreshTokenCookie.toString());
+
             Map<String, Object> responseMap = new HashMap<>();
             responseMap.put("memberId", response.memberId());
             responseMap.put("completeFlag", response.completeFlag());
             responseMap.put("accessToken", response.token());
+            responseMap.put("refreshToken", refreshTokenCookie.toString());
             
-            // Refresh Token 쿠키 생성 후 헤더에 추가
-            ResponseCookie refreshTokenCookie = refreshTokenCookieConfig.createCookie(response.refreshToken());
-
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                     .body(new ApiResponse<>(provider + " 로그인 성공", responseMap, HttpStatus.OK));

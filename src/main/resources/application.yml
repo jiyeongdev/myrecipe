@@ -67,7 +67,7 @@ redis:
 jwt:
   secret: ${JWT_SECRET}
   access-token-validity-in-seconds: 300 #5분  # 86400    # 24시간
-  refresh-token-validity-in-seconds: 604800  # 7일
+  refresh-token-validity-in-seconds: 1209600  # 14일
   admin-token-validity-in-seconds: 31536000    # 1년
   admin-token: ${ADMIN-TOKEN} # 관리자 토큰
   cookie:

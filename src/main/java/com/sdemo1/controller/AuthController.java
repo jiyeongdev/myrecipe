@@ -4,14 +4,12 @@ import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.security.JwtTokenProvider;
 import com.sdemo1.entity.Member;
 import com.sdemo1.repository.MemberRepository;
-import com.sdemo1.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import io.jsonwebtoken.ExpiredJwtException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -107,6 +105,7 @@ public class AuthController {
                         .body(new ApiResponse<>("Refresh Token이 없습니다.", null, HttpStatus.UNAUTHORIZED));
             }
 
+            //배지영
             // Refresh Token 검증 및 만료 체크
             try {
                 jwtTokenProvider.validateAndGetAuthentication(refreshToken);
