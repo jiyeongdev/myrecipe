@@ -11,10 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
-
 import com.sdemo1.common.response.ApiResponse;
-import com.sdemo1.dto.CookRecipeRequest;
-import com.sdemo1.dto.CookRecipeResponse;
+import com.sdemo1.request.CookRecipeRequest;
+import com.sdemo1.response.CookRecipeResponse;
 import com.sdemo1.service.CookRecipeService;
 
 import lombok.RequiredArgsConstructor;

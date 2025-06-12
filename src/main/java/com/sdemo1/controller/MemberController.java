@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.http.HttpStatus;
-
 import com.sdemo1.common.response.ApiResponse;
-import com.sdemo1.dto.MemberProfileRequest;
-import com.sdemo1.dto.MemberResponse;
+import com.sdemo1.request.MemberProfileRequest;
+import com.sdemo1.response.MemberResponse;
 import com.sdemo1.repository.MemberRepository;
 import com.sdemo1.entity.Member;
 

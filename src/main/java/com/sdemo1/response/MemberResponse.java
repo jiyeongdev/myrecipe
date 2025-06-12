@@ -1,4 +1,4 @@
-package com.sdemo1.dto;
+package com.sdemo1.response;
 
 import lombok.Builder;
 import lombok.Getter;

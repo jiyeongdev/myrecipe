@@ -3,7 +3,6 @@ package com.sdemo1.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sdemo1.entity.Member;
 import com.sdemo1.entity.MemberSocialAccount;
 import com.sdemo1.repository.MemberSocialAccountRepository;
 

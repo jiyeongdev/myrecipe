@@ -1,4 +1,4 @@
-package com.sdemo1.dto;
+package com.sdemo1.request;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -2,14 +2,14 @@ package com.sdemo1.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.sdemo1.dto.CookRecipeResponse;
+import com.sdemo1.response.CookRecipeResponse;
 import com.sdemo1.entity.CookItem;
 import com.sdemo1.repository.CookItemRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.sdemo1.dto.CookRecipeRequest;
+import com.sdemo1.request.CookRecipeRequest;
 import com.sdemo1.entity.RecipeStep;
 import com.sdemo1.repository.RecipeStepRepository;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,6 +1,6 @@
 package com.sdemo1.util;
 
-import com.sdemo1.dto.CookRecipeRequest;
+import com.sdemo1.request.CookRecipeRequest;
 import java.util.List;
 import java.util.ArrayList;
 import org.springframework.stereotype.Component;
