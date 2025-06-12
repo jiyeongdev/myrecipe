@@ -93,7 +93,7 @@ public class FoodCategoryController {
 
     @GetMapping("/search/{keyword}")
     public ApiResponse<Page<FoodItem>> findByFoodName(
-            @PathVariable String keyword,
+            @PathVariable(name = "keyword") String keyword,
             @RequestParam(name = "page", required = false) Integer page,
             @RequestParam(name = "size", required = false) Integer size) {
         

@@ -28,7 +28,6 @@ public class JwtTokenProvider {
     private final Key key;
     private final long accessTokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
-    private static final int KOREA_TIMEZONE_OFFSET = 9; // 한국 시간대 오프셋 (UTC+9)
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
@@ -47,14 +46,14 @@ public class JwtTokenProvider {
      * 현재 시간을 한국 시간으로 변환
      */
     private Date getCurrentKoreaTime() {
-        return new Date(System.currentTimeMillis() + (KOREA_TIMEZONE_OFFSET * 60 * 60 * 1000));
+        return new Date(System.currentTimeMillis());
     }
 
     /**
      * 만료 시간을 한국 시간으로 계산
      */
     private Date calculateExpirationTime(long validityInMilliseconds) {
-        return new Date(getCurrentKoreaTime().getTime() + validityInMilliseconds);
+        return new Date(System.currentTimeMillis() + validityInMilliseconds);
     }
 
     /**
@@ -80,9 +79,16 @@ public class JwtTokenProvider {
         Date validity = calculateExpirationTime(validityInMilliseconds);
         String memberId = String.valueOf(claims.get("memberId"));
 
+        log.info("Access Token 생성 - 발급 시간: {}, 만료 시간: {}, 유효 기간: {}초", 
+            now, validity, validityInMilliseconds / 1000);
+
         return Jwts.builder()
                 .setSubject(memberId)
-                .setClaims(claims)
+                .claim("memberId", claims.get("memberId"))
+                .claim("name", claims.get("name"))
+                .claim("role", claims.get("role"))
+                .claim("phone", claims.get("phone"))
+                .claim("completeFlag", claims.get("completeFlag"))
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -95,6 +101,9 @@ public class JwtTokenProvider {
     private String createRefreshToken(String memberId, long validityInMilliseconds) {
         Date now = getCurrentKoreaTime();
         Date validity = calculateExpirationTime(validityInMilliseconds);
+
+        log.info("Refresh Token 생성 - 발급 시간: {}, 만료 시간: {}, 유효 기간: {}초", 
+            now, validity, validityInMilliseconds / 1000);
 
         return Jwts.builder()
                 .setSubject(memberId)
@@ -115,14 +124,19 @@ public class JwtTokenProvider {
                 return getAuthentication(token);
             }
             
-            Jwts.parserBuilder()
+            Claims claims = Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
-                .parseClaimsJws(token);
+                .parseClaimsJws(token)
+                .getBody();
+
+            log.info("토큰 검증 - 현재 시간: {}, 만료 시간: {}", 
+                getCurrentKoreaTime(), claims.getExpiration());
                 
             return getAuthentication(token);
         } catch (ExpiredJwtException e) {
-            log.error("JWT 토큰이 만료되었습니다: {}", e.getMessage());
+            log.error("JWT 토큰이 만료되었습니다. 만료 시간: {}, 현재 시간: {}", 
+                e.getClaims().getExpiration(), getCurrentKoreaTime());
             throw new TokenValidationException(TokenError.EXPIRED);
         } catch (UnsupportedJwtException e) {
             log.error("지원하지 않는 JWT 토큰입니다: {}", e.getMessage());
@@ -192,15 +206,12 @@ public class JwtTokenProvider {
      */
     public Authentication getAuthentication(String token) {
         Claims claims = getClaimsFromToken(token);
-        Collection<? extends GrantedAuthority> authorities = getAuthoritiesFromClaims(claims);
-        String subject = claims.getSubject();
-        
-        log.info("JWT 토큰 subject: {}", subject);
+        log.info("JWT 토큰 subject: {}", claims.getSubject());
         
         return new UsernamePasswordAuthenticationToken(
-            subject,   // 사용자 식별자 (memberId)
+            claims.getSubject(),   // 사용자 식별자 (memberId)
             "",        // credentials (JWT에서는 비밀번호가 필요 없으므로 빈 문자열)
-            authorities // 권한 정보
+            getAuthoritiesFromClaims(claims) // 권한 정보
         );
     }
 
@@ -224,18 +235,26 @@ public class JwtTokenProvider {
     }
 
     /**
-     * Claims에서 권한 정보 추출
+     * Claims에서 "role" 키 사용해서,
+     * 
+     * JWT 토큰의 클레임(claims)에서 사용자의 권한 정보를 추출
+     * Spring Security의 GrantedAuthority 형태로 변환
      */
     private Collection<? extends GrantedAuthority> getAuthoritiesFromClaims(Claims claims) {
         try {
-            String auth = claims.get("auth", String.class);
+            // 1. "role" 키에서 권한 정보를 가져옴
+            String auth = claims.get("role", String.class);
+
+            // 2. 권한이 없으면 기본값 "ROLE_USER" 부여
             if (auth == null || auth.isEmpty()) {
                 return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
             }
+            // 3. 권한 문자열을 쉼표(,)로 분리하고 각각을 GrantedAuthority로 변환
             return Arrays.stream(auth.split(","))
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
         } catch (Exception e) {
+            // 4. 에러 발생 시 기본 권한 부여
             log.error("권한 정보 추출 중 오류 발생: {}", e.getMessage());
             return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
         }

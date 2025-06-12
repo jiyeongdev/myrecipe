@@ -43,58 +43,58 @@ public class AuthController {
     @Value("${jwt.cookie.refresh-token.same-site}")
     private String refreshTokenSameSite;
 
-    @GetMapping("/check")
-    public ResponseEntity<ApiResponse<?>> checkAuth(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
-        try {
-            log.info("=== 자동 로그인 체크 시작 ===");
+    // @GetMapping("/check")
+    // public ResponseEntity<ApiResponse<?>> checkAuth(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+    //     try {
+    //         log.info("=== 자동 로그인 체크 시작 ===");
             
-            if (refreshToken == null) {
-                log.info("Refresh Token이 없습니다.");
-                return ResponseEntity.ok()
-                        .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
-            }
+    //         if (refreshToken == null) {
+    //             log.info("Refresh Token이 없습니다.");
+    //             return ResponseEntity.ok()
+    //                     .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
+    //         }
 
-            // // Refresh Token 검증
-            // if (!jwtTokenProvider.validateToken(refreshToken)) {
-            //     log.info("유효하지 않은 Refresh Token입니다.");
-            //     return ResponseEntity.ok()
-            //             .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
-            // }
+    //         // // Refresh Token 검증
+    //         // if (!jwtTokenProvider.validateToken(refreshToken)) {
+    //         //     log.info("유효하지 않은 Refresh Token입니다.");
+    //         //     return ResponseEntity.ok()
+    //         //             .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
+    //         // }
 
-              // Refresh Token 검증 및 만료 체크
-              try { 
-                jwtTokenProvider.validateAndGetAuthentication(refreshToken);
-            } catch (JwtTokenProvider.TokenValidationException e) {
-                log.error("Refresh Token 검증 실패: {}", e.getMessage());
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>(e.getMessage(), null, HttpStatus.UNAUTHORIZED));
-            }
+    //           // Refresh Token 검증 및 만료 체크
+    //           try { 
+    //             jwtTokenProvider.validateAndGetAuthentication(refreshToken);
+    //         } catch (JwtTokenProvider.TokenValidationException e) {
+    //             log.error("Refresh Token 검증 실패: {}", e.getMessage());
+    //             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+    //                     .body(new ApiResponse<>(e.getMessage(), null, HttpStatus.UNAUTHORIZED));
+    //         }
 
-            // Refresh Token에서 사용자 정보 추출
-            String memberId = jwtTokenProvider.getUserInfoFromToken(refreshToken);
-            log.info("user: {}", memberId);
+    //         // Refresh Token에서 사용자 정보 추출
+    //         String memberId = jwtTokenProvider.getUserInfoFromToken(refreshToken);
+    //         log.info("user: {}", memberId);
 
-            // DB에서 사용자 정보 조회
-            Member member = memberRepository.findById(Integer.parseInt(memberId))
-                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+    //         // DB에서 사용자 정보 조회
+    //         Member member = memberRepository.findById(Integer.parseInt(memberId))
+    //                 .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-            // 사용자 정보로 AccessToken 생성
-            String newAccessToken = jwtTokenProvider.createAccessToken(member);
+    //         // 사용자 정보로 AccessToken 생성
+    //         String newAccessToken = jwtTokenProvider.createAccessToken(member);
 
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("isLoggedIn", true);
-            response.put("accessToken", newAccessToken);
+    //         Map<String, Object> response = new HashMap<>();
+    //         response.put("isLoggedIn", true);
+    //         response.put("accessToken", newAccessToken);
 
-            return ResponseEntity.ok()
-                    .body(new ApiResponse<>("로그인 상태입니다.", response, HttpStatus.OK));
+    //         return ResponseEntity.ok()
+    //                 .body(new ApiResponse<>("로그인 상태입니다.", response, HttpStatus.OK));
 
-        } catch (Exception e) {
-            log.error("자동 로그인 체크 실패: {}", e.getMessage());
-            return ResponseEntity.ok()
-                    .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
-        }
-    }
+    //     } catch (Exception e) {
+    //         log.error("자동 로그인 체크 실패: {}", e.getMessage());
+    //         return ResponseEntity.ok()
+    //                 .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
+    //     }
+    // }
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<?>> refreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
