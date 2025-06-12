@@ -1,11 +1,17 @@
 package com.sdemo1.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sdemo1.common.response.ApiResponse;
+
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -14,6 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,18 +30,14 @@ import java.util.stream.Collectors;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        /** 배지영
-         *  String path = request.getRequestURI();
+        String path = request.getRequestURI();
         // JWT 토큰이 필요하지 않은 경로들
-        return path.startsWith("/auth/") || 
-               path.startsWith("/login/") ||
-               path.startsWith("/ck/auth/") ||
+        return path.startsWith("/ck/auth/") ||
                path.equals("/health-check");
-         */
-        return true;  // 모든 요청에 대해 필터링하지 않음
     }
 
     @Override
@@ -52,19 +56,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = resolveToken(request);
             log.info("JWT 토큰 추출: {}", token);
 
-            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
-                Authentication authentication = jwtTokenProvider.getAuthentication(token);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.info("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
+            if (StringUtils.hasText(token)) {
+                try {
+                    if (jwtTokenProvider.validateToken(token)) {
+                        Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                        SecurityContextHolder.getContext().setAuthentication(authentication);
+                        log.info("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
+                    }
+                } catch (ExpiredJwtException e) {
+                    log.error("Access Token이 만료되었습니다.");
+                    handleErrorResponse(response, HttpStatus.UNAUTHORIZED, "Access Token이 만료되었습니다. 토큰을 재발급해주세요.");
+                    return;
+                }
             } else {
-                log.info("토큰이 없거나 유효하지 않습니다");
+                log.info("토큰이 없습니다");
             }
 
             filterChain.doFilter(request, response);
             log.info("=== JWT 필터 종료 ===");
         } catch (Exception e) {
             log.error("JWT 필터 처리 중 오류 발생", e);
-            throw e;
+            handleErrorResponse(response, HttpStatus.INTERNAL_SERVER_ERROR, "인증 처리 중 오류가 발생했습니다.");
         }
     }
 
@@ -74,5 +86,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private void handleErrorResponse(HttpServletResponse response, HttpStatus status, String message) throws IOException {
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        
+        ApiResponse<Void> apiResponse = new ApiResponse<>(message, null, status);
+        response.getWriter().write(objectMapper.writeValueAsString(apiResponse));
     }
 } 

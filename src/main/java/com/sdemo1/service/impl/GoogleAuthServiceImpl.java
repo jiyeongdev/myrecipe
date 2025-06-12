@@ -112,7 +112,7 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
             
         } catch (Exception e) {
             log.error("{} OAuth 토큰 요청 실패: {}", provider, e.getMessage());
-            throw new RuntimeException("{} OAuth 토큰 요청 실패", e);
+            throw new RuntimeException(String.format("%s OAuth 토큰 요청 실패: %s", provider, e.getMessage()));
         }
     }
 
@@ -143,7 +143,7 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
             );
         } catch (Exception e) {
             log.error("{} 사용자 정보 요청 실패: {}", provider, e.getMessage());
-            throw new RuntimeException("{} 사용자 정보 요청 실패", e);
+            throw new RuntimeException(String.format("%s 사용자 정보 요청 실패: %s", provider, e.getMessage()));
         }
     }
 
@@ -196,7 +196,7 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
             return new SocialLoginResponse(accessToken, refreshToken, member.getCompleteFlag(), member.getMemberId());
         } catch (Exception e) {
             log.error("사용자 정보 저장/업데이트 실패: {}", e.getMessage());
-            throw new RuntimeException("사용자 정보 저장/업데이트 실패", e);
+            throw new RuntimeException(String.format("사용자 정보 저장/업데이트 실패: %s", e.getMessage()));
         }
     }
 } 

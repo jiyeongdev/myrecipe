@@ -44,11 +44,10 @@ public class SecurityConfig {
             })
             .authorizeHttpRequests(auth -> {
                 log.info("인증 요구사항 설정");
-                auth.anyRequest().permitAll();  // 모든 요청 허용
+                // auth.anyRequest().permitAll();  // 모든 요청 허용
 
-                //배지영
-                //auth.requestMatchers("/", "/login/**", "/health-check", "/ck/auth/**").permitAll()
-                //.anyRequest().authenticated();
+                auth.requestMatchers("/",  "/health-check", "/ck/auth/**").permitAll()
+                .anyRequest().authenticated();
             })
             .exceptionHandling(exception -> {
                 log.info("예외 처리 설정");

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import io.jsonwebtoken.ExpiredJwtException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,11 +98,17 @@ public class AuthController {
                         .body(new ApiResponse<>("Refresh Token이 없습니다.", null, HttpStatus.UNAUTHORIZED));
             }
 
-            // Refresh Token 검증
-            if (!jwtTokenProvider.validateToken(refreshToken)) {
-                log.error("유효하지 않은 Refresh Token입니다.");
+            // Refresh Token 검증 및 만료 체크
+            try {
+                if (!jwtTokenProvider.validateToken(refreshToken)) {
+                    log.error("유효하지 않은 Refresh Token입니다.");
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                            .body(new ApiResponse<>("유효하지 않은 Refresh Token입니다.", null, HttpStatus.UNAUTHORIZED));
+                }
+            } catch (ExpiredJwtException e) {
+                log.error("Refresh Token이 만료되었습니다.");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>("유효하지 않은 Refresh Token입니다.", null, HttpStatus.UNAUTHORIZED));
+                        .body(new ApiResponse<>("Refresh Token이 만료되었습니다. 다시 로그인해주세요.", null, HttpStatus.UNAUTHORIZED));
             }
 
             // Refresh Token에서 사용자 정보 추출
