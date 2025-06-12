@@ -31,7 +31,13 @@ public abstract class AbstractSocialAuthService implements SocialAuthService {
 
     @Override
     public String getRedirectUri() {
-        return currentRedirectUri;
+        return this.currentRedirectUri;
+    }
+
+    @Override
+    public void clearRedirectUri() {
+        this.currentRedirectUri = this.redirectUri;
+        log.info("Redirect URI가 기본값으로 초기화되었습니다: {}", this.currentRedirectUri);
     }
 
     /**

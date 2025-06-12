@@ -11,6 +11,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import com.sdemo1.entity.Member;
 import com.sdemo1.repository.MemberRepository;
+import com.sdemo1.util.JwtTokenUtil;
+
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +28,6 @@ public class JwtTokenProvider {
     private final Key key;
     private final long accessTokenValidityInMilliseconds;
     private final long refreshTokenValidityInMilliseconds;
-    private final MemberRepository memberRepository;
 
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
@@ -39,38 +40,49 @@ public class JwtTokenProvider {
         this.accessTokenValidityInMilliseconds = accessTokenValidityInSeconds * 1000;
         this.refreshTokenValidityInMilliseconds = refreshTokenValidityInSeconds * 1000;
         this.adminToken = adminToken;
-        this.memberRepository = memberRepository;
     }
 
     /**
      * Access Token 생성
      */
-    public String createAccessToken(Map<String, Object> userInfo) {
-        log.info("=== Access Token 생성 시작 ===");
-        return createToken(userInfo, accessTokenValidityInMilliseconds);
+    public String createAccessToken(Member member) {
+        Map<String, Object> claims = JwtTokenUtil.createUserInfoFromMember(member);
+        return createAccessToken(claims, accessTokenValidityInMilliseconds);
     }
 
     /**
-     * Refresh Token 생성
+     * memberId 값만 포함한 Refresh Token 생성
      */
-    public String createRefreshToken(Map<String, Object> userInfo) {
-        log.info("=== Refresh Token 생성 시작 ===");
-        return createToken(userInfo, refreshTokenValidityInMilliseconds);
+    public String createRefreshToken(Member member) {
+        return createRefreshToken(String.valueOf(member.getMemberId()), refreshTokenValidityInMilliseconds);
     }
 
     /**
-     * JWT 토큰 생성
+     * Access Token 생성 (내부용)
      */
-    private String createToken(Map<String, Object> userInfo, long validityInMilliseconds) {
+    private String createAccessToken(Map<String, Object> claims, long validityInMilliseconds) {
+        Date now = new Date();
+        Date validity = new Date(now.getTime() + validityInMilliseconds);
+        String memberId = String.valueOf(claims.get("memberId"));
+
+        return Jwts.builder()
+                .setSubject(memberId)
+                .setClaims(claims)
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    /**
+     * Refresh Token 생성 (내부용)
+     */
+    private String createRefreshToken(String memberId, long validityInMilliseconds) {
         Date now = new Date();
         Date validity = new Date(now.getTime() + validityInMilliseconds);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userInfo.get("memberId")))
-                .claim("memberId", userInfo.get("memberId"))
-                .claim("name", userInfo.get("name"))
-                .claim("role", userInfo.get("role"))
-                .claim("phone", userInfo.get("phone"))
+                .setSubject(memberId)
                 .setIssuedAt(now)
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS512)
@@ -149,7 +161,7 @@ public class JwtTokenProvider {
     /**
      * 토큰에서 사용자 식별자 추출
      */
-    public String getUsernameFromToken(String token) {
+    public String getUserInfoFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()

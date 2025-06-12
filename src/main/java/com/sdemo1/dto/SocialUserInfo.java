@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class SocialUserInfo {
     private String email;
-    private String phone;
     private String name;
     private String picture;
     private String socialId;

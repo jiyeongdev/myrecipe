@@ -6,6 +6,7 @@ import com.sdemo1.service.SocialAuthService;
 import com.sdemo1.service.SocialAuthService.SocialLoginResponse;
 import com.sdemo1.config.RefreshTokenCookieConfig;
 import com.sdemo1.common.response.ApiResponse;
+import com.sdemo1.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -39,6 +40,7 @@ public class SocialAuthController {
 
             log.info("=== Google OAuth 인증 URL 리다이렉트 시작 ===");
             socialAuthService.setRedirectUri(redirectUri);
+            log.info("현재 Redirect URI: {}", socialAuthService.getRedirectUri());
 
             String authUrl = socialAuthService.getAuthorizationUrl(provider);
 
@@ -72,7 +74,7 @@ public class SocialAuthController {
         return new ApiResponse<>("인증 URL 생성 완료", authUrl, HttpStatus.OK);
     }
 
-    @PostMapping("/{provider}/token-fake")
+    @PostMapping("/{provider}/token")
     public ResponseEntity<ApiResponse<?>> getSocialToken(
             @PathVariable("provider") String provider,
             @RequestBody Map<String, String> request) {
@@ -108,20 +110,21 @@ public class SocialAuthController {
             SocialLoginResponse response = socialAuthService.createAccessTokenByUserInfo(userInfo);
 
             Map<String, Object> responseMap = new HashMap<>();
+            responseMap.put("memberId", response.memberId());
             responseMap.put("completeFlag", response.completeFlag());
             responseMap.put("accessToken", response.token());
-            responseMap.put("provider", provider);
-
+            
             // Refresh Token 쿠키 생성 후 헤더에 추가
-            ResponseCookie refreshTokenCookie = refreshTokenCookieConfig.createCookie(response.token());
+            ResponseCookie refreshTokenCookie = refreshTokenCookieConfig.createCookie(response.refreshToken());
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
                     .body(new ApiResponse<>(provider + " 로그인 성공", responseMap, HttpStatus.OK));
         } catch (Exception e) {
             log.error("소셜 로그인 토큰 요청 실패: {}", e.getMessage());
-            return ResponseEntity.internalServerError()
-                .body(ApiResponse.error("소셜 로그인 처리 중 오류가 발생했습니다."));
+            throw new CustomException("소셜 로그인 처리 중 오류가 발생했습니다.", e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value());
+        } finally {
+            socialAuthService.clearRedirectUri();
         }
     }
 

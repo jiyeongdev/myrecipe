@@ -2,12 +2,13 @@ package com.sdemo1.controller;
 
 import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.security.JwtTokenProvider;
+import com.sdemo1.entity.Member;
+import com.sdemo1.repository.MemberRepository;
+import com.sdemo1.util.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,11 +17,12 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/ck/auth")
+@RequestMapping("/ck/auth/token")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final MemberRepository memberRepository;
 
     @Value("${jwt.cookie.refresh-token.name}")
     private String refreshTokenCookieName;
@@ -58,12 +60,17 @@ public class AuthController {
                         .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
             }
 
-            // Refresh Token이 유효하면 새로운 Access Token 발급
-            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("sub", username);
+            // Refresh Token에서 사용자 정보 추출
+            String memberId = jwtTokenProvider.getUserInfoFromToken(refreshToken);
+            log.info("user: {}", memberId);
 
-            String newAccessToken = jwtTokenProvider.createAccessToken(userInfo);
+            // DB에서 사용자 정보 조회
+            Member member = memberRepository.findById(Integer.parseInt(memberId))
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+            // 사용자 정보로 AccessToken 생성
+            String newAccessToken = jwtTokenProvider.createAccessToken(member);
+
 
             Map<String, Object> response = new HashMap<>();
             response.put("isLoggedIn", true);
@@ -98,12 +105,21 @@ public class AuthController {
             }
 
             // Refresh Token에서 사용자 정보 추출
-            String username = jwtTokenProvider.getUsernameFromToken(refreshToken);
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("sub", username);
+            String memberId = jwtTokenProvider.getUserInfoFromToken(refreshToken);
+            if (memberId == null) {
+                log.error("사용자 정보를 찾을 수 없습니다.");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>("사용자 정보를 찾을 수 없습니다.", null, HttpStatus.UNAUTHORIZED));
+            }
+            
+            log.info("user: {}", memberId);
 
-            // 새로운 Access Token만 생성
-            String newAccessToken = jwtTokenProvider.createAccessToken(userInfo);
+            // DB에서 사용자 정보 조회
+            Member member = memberRepository.findById(Integer.parseInt(memberId))
+                    .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+            // 사용자 정보로 AccessToken 생성
+            String newAccessToken = jwtTokenProvider.createAccessToken(member);
 
             Map<String, Object> response = new HashMap<>();
             response.put("accessToken", newAccessToken);

@@ -12,7 +12,8 @@ public interface SocialAuthService {
     String decodeAuthorizationCode(String code);
     void setRedirectUri(String redirectUri);
     String getRedirectUri();
+    void clearRedirectUri();
     void loggingAuthorizationUri(String provider, String tokenUri, HttpHeaders headers, MultiValueMap<String, String> params);
     
-    record SocialLoginResponse(String token, boolean completeFlag) {}
+    record SocialLoginResponse(String token, String refreshToken, boolean completeFlag, int memberId) {}
 } 

@@ -3,6 +3,9 @@ package com.sdemo1.service.impl;
 import com.sdemo1.dto.SocialUserInfo;
 import com.sdemo1.entity.Member;
 import com.sdemo1.entity.MemberSocialAccount;
+import com.sdemo1.repository.MemberRepository;
+import com.sdemo1.repository.MemberSocialAccountRepository;
+import com.sdemo1.security.JwtTokenProvider;
 import com.sdemo1.service.AbstractSocialAuthService;
 import com.sdemo1.service.MemberService;
 import com.sdemo1.service.MemberSocialAccountService;
@@ -22,6 +25,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,15 +35,21 @@ import java.util.Optional;
 public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
 
     private final RestTemplate restTemplate;
+    private final MemberRepository memberRepository;
+    private final MemberSocialAccountRepository memberSocialAccountRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenUtil jwtTokenUtil;
     private final MemberService memberService;
     private final MemberSocialAccountService memberSocialAccountService;
-    private final JwtTokenUtil jwtTokenUtil;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
 
     @Value("${spring.security.oauth2.client.registration.google.client-secret}")
     private String clientSecret;
+
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private String redirectUri;
 
     @Value("${spring.security.oauth2.client.provider.google.token-uri}")
     private String tokenUri;
@@ -58,8 +68,8 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
         return authorizationUri + "?" +
                 "client_id=" + clientId +
                 "&redirect_uri=" + getRedirectUri() +
-                "&response_type=code" + 
-                "&scope=openid%20profile%20email" ;
+                "&response_type=code" +
+                "&scope=openid%20email%20profile";
     }
 
     /**
@@ -83,10 +93,8 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
         loggingAuthorizationUri(provider, tokenUri, headers, params);
-
                 
         try {
-
             ResponseEntity<Map> response = restTemplate.exchange(
                 tokenUri,
                 HttpMethod.POST,
@@ -98,32 +106,13 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
             log.info("token Headers: {}", response.getHeaders());
             log.info("token Body: {}", response.getBody());
 
-            
             // 응답에서 액세스 토큰 추출
             String accessToken = (String) response.getBody().get("access_token");
             return accessToken;
             
-            
         } catch (Exception e) {
-            log.error("=== Google 토큰 요청 실패 상세 정보 ===");
-            log.error("에러 메시지: {}", e.getMessage());
-            log.error("에러 클래스: {}", e.getClass().getName());
-            if (e.getCause() != null) {
-                log.error("원인: {}", e.getCause().getMessage());
-                log.error("원인 스택 트레이스:", e.getCause());
-            }
-            log.error("전체 스택 트레이스:", e);
-
-            String errorMessage;
-            if (e.getMessage().contains("invalid_grant")) {
-                errorMessage = "인증 코드가 만료되었거나 이미 사용되었습니다. 새로운 인증 코드를 요청해주세요.";
-            } else if (e.getMessage().contains("redirect_uri_mismatch")) {
-                errorMessage = "redirect_uri가 일치하지 않습니다. 설정된 URI: " + getRedirectUri();
-            } else {
-                errorMessage = "OAuth 토큰 요청 중 오류 발생: " + e.getMessage();
-            }
-            log.error(errorMessage);
-            throw new RuntimeException(errorMessage, e);  // 원본 예외를 포함하여 다시 던짐
+            log.error("{} OAuth 토큰 요청 실패: {}", provider, e.getMessage());
+            throw new RuntimeException("{} OAuth 토큰 요청 실패", e);
         }
     }
 
@@ -136,23 +125,22 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
         headers.setBearerAuth(accessToken);
 
         try {
-        HttpEntity<?> request = new HttpEntity<>(headers);
-        ResponseEntity<Map> response = restTemplate.exchange(
-            userInfoUri,
-            HttpMethod.GET,
-            request,
-            Map.class
-        );
-        Map<String, Object> userInfo = response.getBody();
+            HttpEntity<?> request = new HttpEntity<>(headers);
+            ResponseEntity<Map> response = restTemplate.exchange(
+                userInfoUri,
+                HttpMethod.GET,
+                request,
+                Map.class
+            );
+            Map<String, Object> userInfo = response.getBody();
 
-        return new SocialUserInfo(
-            (String) userInfo.get("email"),
-            (String) userInfo.get("phone"),
-            (String) userInfo.get("name"),
-            (String) userInfo.get("picture"),
-            (String) userInfo.get("sub"),
-            MemberSocialAccount.Provider.GOOGLE.getValue()
-        );
+            return new SocialUserInfo(
+                (String) userInfo.get("email"),
+                (String) userInfo.get("name"),
+                (String) userInfo.get("picture"),
+                (String) userInfo.get("sub"),
+                MemberSocialAccount.Provider.GOOGLE.getValue()
+            );
         } catch (Exception e) {
             log.error("{} 사용자 정보 요청 실패: {}", provider, e.getMessage());
             throw new RuntimeException("{} 사용자 정보 요청 실패", e);
@@ -162,10 +150,10 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
     @Override
     @Transactional
     public SocialLoginResponse createAccessTokenByUserInfo(SocialUserInfo userInfo) {
-        log.info("=== {} 사용자 정보 저장/업데이트 시작 ===", userInfo.getProvider());
-        log.info("사용자 정보: {}", userInfo);
-
         try {
+            log.info("=== Google 사용자 정보 저장/업데이트 시작 ===");
+            log.info("사용자 정보: {}", userInfo);
+
             // 기존 소셜 계정 여부 확인
             Optional<MemberSocialAccount> existingAccount = memberSocialAccountService
                 .findByProviderAndProviderId(
@@ -177,6 +165,8 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
             if (existingAccount.isPresent()) {  
                 //기존 회원
                 member = existingAccount.get().getMember();
+                log.info("기존 회원 정보 조회: memberId={}, name={}, completeFlag={}", 
+                    member.getMemberId(), member.getName(), member.getCompleteFlag());
 
             }else{ 
                 //새 회원 기본 정보 생성
@@ -189,23 +179,21 @@ public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
 
                 // 새 소셜 계정 생성 
                 MemberSocialAccount socialAccount = memberSocialAccountService.createSocialAccount(
-                member.getMemberId(), 
-                userInfo.getEmail(), 
-                MemberSocialAccount.Provider.GOOGLE,
-                userInfo.getSocialId(), 
-                userInfo.getPicture()
-            );
-            log.info("소셜 계정 정보 저장/업데이트 완료: {}", socialAccount);
+                    member.getMemberId(), 
+                    userInfo.getEmail(), 
+                    MemberSocialAccount.Provider.GOOGLE,
+                    userInfo.getSocialId(), 
+                    userInfo.getPicture()
+                );
+                log.info("소셜 계정 정보 저장/업데이트 완료: {}", socialAccount);
             }
 
-            // JWT 토큰 생성
-            Map<String, Object> claims = JwtTokenUtil.createUserInfoFromMember(member);
-            String token = Jwts.builder()
-                .setClaims(claims)
-                .signWith(jwtTokenUtil.getKey())
-                .compact();
+            // AccessToken 생성
+            String accessToken = jwtTokenProvider.createAccessToken(member);
+            // RefreshToken 생성
+            String refreshToken = jwtTokenProvider.createRefreshToken(member);
 
-            return new SocialLoginResponse( token, member.getCompleteFlag());
+            return new SocialLoginResponse(accessToken, refreshToken, member.getCompleteFlag(), member.getMemberId());
         } catch (Exception e) {
             log.error("사용자 정보 저장/업데이트 실패: {}", e.getMessage());
             throw new RuntimeException("사용자 정보 저장/업데이트 실패", e);

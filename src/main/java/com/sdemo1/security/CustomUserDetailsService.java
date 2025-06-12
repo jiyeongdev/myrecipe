@@ -6,6 +6,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.sdemo1.repository.MemberSocialAccountRepository;
+import com.sdemo1.repository.MemberRepository;
+import com.sdemo1.entity.Member;
+import com.sdemo1.entity.MemberSocialAccount;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     
 
     private final MemberSocialAccountRepository memberSocialAccountRepository;
+    private final MemberRepository memberRepository;
 
     /**
      * Spring Security가 사용자 인증을 할 때 사용자 정보를 로드하는 역할
@@ -27,16 +31,21 @@ public class CustomUserDetailsService implements UserDetailsService {
      * JWT 토큰 검증 시
      * Spring Security의 인증 필터에서 사용자 정보가 필요할 때
 
-     * @param username 사용자 이름
+     * @param memberId 사용자 ID
      * @return 사용자 정보
      * @throws UsernameNotFoundException 사용자를 찾을 수 없을 때 발생
      */
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        CustomUserDetails data = memberSocialAccountRepository.findByUserLoginId(username)
-                .map(account -> new CustomUserDetails(account.getMember(), account))
-                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
-        log.info("사용자 정보: {}", data);
-        return data;
+    public UserDetails loadUserByUsername(String memberId) throws UsernameNotFoundException {
+        // memberId로 Member를 직접 조회
+        Member member = memberRepository.findById(Integer.parseInt(memberId))
+                .orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + memberId));
+        
+        // 해당 member의 소셜 계정 중 첫 번째 계정을 사용
+        MemberSocialAccount socialAccount = memberSocialAccountRepository.findByMemberId(member.getMemberId())
+                .orElseThrow(() -> new UsernameNotFoundException("소셜 계정을 찾을 수 없습니다: " + memberId));
+        
+        log.info("사용자 정보: memberId={}, name={}", member.getMemberId(), member.getName());
+        return new CustomUserDetails(member, socialAccount);
     }
 } 
