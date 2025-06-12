@@ -66,7 +66,7 @@ redis:
 # JWT 설정
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity-in-seconds: 60 #1분  # 86400    # 24시간
+  access-token-validity-in-seconds: 300 #5분  # 86400    # 24시간
   refresh-token-validity-in-seconds: 604800  # 7일
   admin-token-validity-in-seconds: 31536000    # 1년
   admin-token: ${ADMIN-TOKEN} # 관리자 토큰
