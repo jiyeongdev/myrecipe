@@ -54,11 +54,20 @@ public class AuthController {
                         .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
             }
 
-            // Refresh Token 검증
-            if (!jwtTokenProvider.validateToken(refreshToken)) {
-                log.info("유효하지 않은 Refresh Token입니다.");
-                return ResponseEntity.ok()
-                        .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
+            // // Refresh Token 검증
+            // if (!jwtTokenProvider.validateToken(refreshToken)) {
+            //     log.info("유효하지 않은 Refresh Token입니다.");
+            //     return ResponseEntity.ok()
+            //             .body(new ApiResponse<>("로그인이 필요합니다.", Map.of("isLoggedIn", false), HttpStatus.OK));
+            // }
+
+              // Refresh Token 검증 및 만료 체크
+              try { 
+                jwtTokenProvider.validateAndGetAuthentication(refreshToken);
+            } catch (JwtTokenProvider.TokenValidationException e) {
+                log.error("Refresh Token 검증 실패: {}", e.getMessage());
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse<>(e.getMessage(), null, HttpStatus.UNAUTHORIZED));
             }
 
             // Refresh Token에서 사용자 정보 추출
@@ -100,18 +109,14 @@ public class AuthController {
 
             // Refresh Token 검증 및 만료 체크
             try {
-                if (!jwtTokenProvider.validateToken(refreshToken)) {
-                    log.error("유효하지 않은 Refresh Token입니다.");
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                            .body(new ApiResponse<>("유효하지 않은 Refresh Token입니다.", null, HttpStatus.UNAUTHORIZED));
-                }
-            } catch (ExpiredJwtException e) {
-                log.error("Refresh Token이 만료되었습니다.");
+                jwtTokenProvider.validateAndGetAuthentication(refreshToken);
+            } catch (JwtTokenProvider.TokenValidationException e) {
+                log.error("Refresh Token 검증 실패: {}", e.getMessage());
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse<>("Refresh Token이 만료되었습니다. 다시 로그인해주세요.", null, HttpStatus.UNAUTHORIZED));
+                        .body(new ApiResponse<>(e.getMessage(), null, HttpStatus.UNAUTHORIZED));
             }
 
-            // Refresh Token에서 사용자 정보 추출
+            // DB에서 사용자 정보 조회
             String memberId = jwtTokenProvider.getUserInfoFromToken(refreshToken);
             if (memberId == null) {
                 log.error("사용자 정보를 찾을 수 없습니다.");
