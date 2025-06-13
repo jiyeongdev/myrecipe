@@ -76,8 +76,9 @@ jwt:
       http-only: true
       secure: true
       path: /
-      max-age: 604800  # 7일 (7 * 24 * 60 * 60)
+      max-age: 1209600  # 14일
       same-site: None
+      domain: fridgepal.com
 
 logging:
   level:
