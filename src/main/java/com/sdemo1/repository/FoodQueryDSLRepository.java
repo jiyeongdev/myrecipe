@@ -142,4 +142,43 @@ public class FoodQueryDSLRepository {
 
         return new PageImpl<>(content, pageable, count);
     }
+
+
+       
+    /**
+     * 음식고유id 배열의 정보를 조회한다
+     * 
+     * @param keyword 검색 키워드
+     * @return 조건에 맞는 FoodItem 목록
+     */
+ 
+     public Page<FoodItem> findIngredientByFoodId(List<String> foodIdList, Pageable pageable) {
+        JPAQuery<FoodItem> query = queryFactory
+            .selectFrom(QFoodItem.foodItem)
+            .where(
+                QFoodItem.foodItem.foodID.stringValue().in(foodIdList)
+                .and(QFoodItem.foodItem.foodID.stringValue().length().goe(2))
+            );
+
+        if (pageable.isUnpaged()) {
+            List<FoodItem> content = query.fetch();
+            return new PageImpl<>(content, pageable, content.size());
+        }
+
+        List<FoodItem> content = query
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
+            .fetch();
+
+        Long count = queryFactory
+            .select(QFoodItem.foodItem.count())
+            .from(QFoodItem.foodItem)
+            .where(
+                QFoodItem.foodItem.foodID.stringValue().in(foodIdList)
+                .and(QFoodItem.foodItem.foodID.stringValue().length().goe(2))
+            )
+            .fetchOne();
+
+        return new PageImpl<>(content, pageable, count);
+    }
 }
