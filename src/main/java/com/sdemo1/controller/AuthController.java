@@ -105,7 +105,6 @@ public class AuthController {
                         .body(new ApiResponse<>("Refresh Token이 없습니다.", null, HttpStatus.UNAUTHORIZED));
             }
 
-            //배지영
             // Refresh Token 검증 및 만료 체크
             try {
                 jwtTokenProvider.validateAndGetAuthentication(refreshToken);

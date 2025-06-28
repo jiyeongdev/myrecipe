@@ -10,7 +10,6 @@ import com.sdemo1.service.AbstractSocialAuthService;
 import com.sdemo1.service.MemberService;
 import com.sdemo1.service.MemberSocialAccountService;
 import com.sdemo1.util.JwtTokenUtil;
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 

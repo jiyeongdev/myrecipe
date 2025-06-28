@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,8 +26,11 @@ import com.sdemo1.service.FoodService;
 @RequestMapping("/food")
 public class FoodCategoryController {
 
-    @Autowired
-    private FoodService foodService;
+    private final FoodService foodService;
+
+    public FoodCategoryController(FoodService foodService) {
+        this.foodService = foodService;
+    }
 
     @GetMapping("/category")
     public ApiResponse<List<FoodItem>> getMainIngredient(){
