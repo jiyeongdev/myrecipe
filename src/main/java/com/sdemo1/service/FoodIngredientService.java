@@ -93,41 +93,41 @@ public class FoodIngredientService {
             resultMessage = String.format("총 %d개의 음식재료가 모두 등록되었습니다.", insertedCount);
         }
 
-        // 새로 등록된 재료가 있는 경우 비동기 레시피 추천 이벤트 발행
-        if (insertedCount > 0) {
-            try {
-                log.info("🚀 비동기 레시피 추천 이벤트 준비 - 사용자: {}, 등록된 재료 수: {}", 
-                        memberId, insertedCount);
+        // // 새로 등록된 재료가 있는 경우 비동기 레시피 추천 이벤트 발행
+        // if (insertedCount > 0) {
+        //     try {
+        //         log.info("🚀 비동기 레시피 추천 이벤트 준비 - 사용자: {}, 등록된 재료 수: {}", 
+        //                 memberId, insertedCount);
                         
-                IngredientRegisteredEvent event = new IngredientRegisteredEvent(
-                    this, 
-                    memberId, 
-                    registeredFoodIds, 
-                    registeredFoodNames,
-                    insertedCount
-                );
+        //         IngredientRegisteredEvent event = new IngredientRegisteredEvent(
+        //             this, 
+        //             memberId, 
+        //             registeredFoodIds, 
+        //             registeredFoodNames,
+        //             insertedCount
+        //         );
                 
-                eventPublisher.publishEvent(event);
+        //         eventPublisher.publishEvent(event);
                 
-                log.info("📢 재료 등록 이벤트 발행 성공 - 사용자: {}, 등록된 재료: {}", 
-                        memberId, registeredFoodNames);
+        //         log.info("📢 재료 등록 이벤트 발행 성공 - 사용자: {}, 등록된 재료: {}", 
+        //                 memberId, registeredFoodNames);
                         
-                if (log.isDebugEnabled()) {
-                    String foodIdsList = registeredFoodIds.stream()
-                            .map(String::valueOf)
-                            .collect(Collectors.joining(", "));
-                    log.debug("📝 이벤트 상세 정보 - 재료 ID 목록: [{}]", foodIdsList);
-                }
+        //         if (log.isDebugEnabled()) {
+        //             String foodIdsList = registeredFoodIds.stream()
+        //                     .map(String::valueOf)
+        //                     .collect(Collectors.joining(", "));
+        //             log.debug("📝 이벤트 상세 정보 - 재료 ID 목록: [{}]", foodIdsList);
+        //         }
                 
-            } catch (Exception e) {
-                log.error("❌ 재료 등록 이벤트 발행 실패 - 사용자: {}, 오류: {}", 
-                         memberId, e.getMessage(), e);
-                // 이벤트 발행 실패해도 메인 기능(재료 등록)은 성공이므로 예외를 다시 던지지 않음
-                // 필요시 모니터링 알림 등을 추가할 수 있음
-            }
-        } else {
-            log.info("ℹ️ 새로 등록된 재료가 없어 레시피 추천 이벤트를 발행하지 않습니다 - 사용자: {}", memberId);
-        }
+        //     } catch (Exception e) {
+        //         log.error("❌ 재료 등록 이벤트 발행 실패 - 사용자: {}, 오류: {}", 
+        //                  memberId, e.getMessage(), e);
+        //         // 이벤트 발행 실패해도 메인 기능(재료 등록)은 성공이므로 예외를 다시 던지지 않음
+        //         // 필요시 모니터링 알림 등을 추가할 수 있음
+        //     }
+        // } else {
+        //     log.info("ℹ️ 새로 등록된 재료가 없어 레시피 추천 이벤트를 발행하지 않습니다 - 사용자: {}", memberId);
+        // }
 
         return resultMessage;
     }
