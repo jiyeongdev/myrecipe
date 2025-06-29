@@ -27,7 +27,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FoodController {
 
-    private final FoodService foodService;
     private final FoodIngredientService foodIngredientService;
 
     /**
@@ -42,7 +41,7 @@ public class FoodController {
             Integer memberId = Integer.parseInt(auth.getName());
 
             String result = foodIngredientService.createFoodIngredients(memberId, requests);
-
+            
             return ResponseEntity.ok()
                     .body(new ApiResponse<>(result, null, HttpStatus.OK));
 
@@ -75,7 +74,7 @@ public class FoodController {
     }
 
     /**
-     * 음식재료 벌크 삭제 API
+     * 음식재료 삭제 API
      */
     @DeleteMapping("/my-ingredient")
     public ResponseEntity<ApiResponse<String>> deleteFoodIngredients(
