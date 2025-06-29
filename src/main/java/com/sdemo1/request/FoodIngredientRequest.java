@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class FoodIngredientRequest {
-    private Integer foodId;
+    private Integer foodID;
     private String foodName;
 } 
