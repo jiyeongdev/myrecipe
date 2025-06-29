@@ -24,4 +24,10 @@ public interface FoodIngredientRepository extends JpaRepository<FoodIngredient, 
     int insertIgnoreIngredient(@Param("memberId") Integer memberId, 
                               @Param("foodId") Integer foodId, 
                               @Param("foodName") String foodName);
+    
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM FoodIngredient f WHERE f.memberId = :memberId AND f.foodId IN :foodIds")
+    int deleteByMemberIdAndFoodIdIn(@Param("memberId") Integer memberId, 
+                                   @Param("foodIds") List<Integer> foodIds);
 } 
