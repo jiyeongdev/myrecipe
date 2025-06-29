@@ -94,7 +94,6 @@ public class AuthController {
     //     }
     // }
 
-    @CrossOrigin(origins = "*")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<?>> refreshToken(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
         try {
