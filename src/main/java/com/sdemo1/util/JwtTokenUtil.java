@@ -5,13 +5,15 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 import org.springframework.beans.factory.annotation.Value;
-
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import javax.crypto.SecretKey;
 import com.sdemo1.entity.Member;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-
+import lombok.extern.slf4j.Slf4j;
+@Slf4j
 @Component
 public class JwtTokenUtil {
 
@@ -95,4 +97,67 @@ public class JwtTokenUtil {
         return getClaimFromToken(token, Claims.NAME, String.class);
     }
 
+
+
+    /**
+     * JWT 토큰에서 사용자 ID를 안전하게 추출하는 메소드
+     * @return 사용자 ID
+     * @throws SecurityException 인증 정보가 없거나 잘못된 경우
+     * @throws NumberFormatException 사용자 ID가 숫자가 아닌 경우
+     */public Integer extractMemberIdFromAuth() {
+        try {
+            // 1. SecurityContext에서 Authentication 객체 가져오기
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            
+            // 2. Authentication 객체 null 체크
+            if (auth == null) {
+                log.error("Authentication 객체가 null입니다");
+                throw new SecurityException("인증 정보가 없습니다");
+            }
+            
+            // 3. 인증 여부 확인
+            if (!auth.isAuthenticated()) {
+                log.error("인증되지 않은 사용자입니다");
+                throw new SecurityException("인증되지 않은 사용자입니다");
+            }
+            
+            // 4. principal 확인
+            Object principal = auth.getPrincipal();
+            if (principal == null) {
+                log.error("Principal이 null입니다");
+                throw new SecurityException("인증 정보가 올바르지 않습니다");
+            }
+            
+            // 5. 사용자 이름(ID) 추출
+            String memberIdStr = auth.getName();
+            if (memberIdStr == null || memberIdStr.trim().isEmpty()) {
+                log.error("사용자 ID가 비어있습니다. Principal: {}", principal);
+                throw new SecurityException("사용자 ID를 찾을 수 없습니다");
+            }
+            
+            // 6. 숫자로 변환
+            try {
+                Integer memberId = Integer.parseInt(memberIdStr.trim());
+                
+                if (memberId <= 0) {
+                    log.error("사용자 ID가 유효하지 않습니다: {}", memberId);
+                    throw new SecurityException("유효하지 않은 사용자 ID입니다");
+                }
+                
+                log.debug("사용자 ID 추출 성공: {}", memberId);
+                return memberId;
+                
+            } catch (NumberFormatException e) {
+                log.error("사용자 ID 형식이 잘못되었습니다: '{}', 오류: {}", memberIdStr, e.getMessage());
+                throw new NumberFormatException("사용자 ID가 숫자 형식이 아닙니다: " + memberIdStr);
+            }
+            
+        } catch (SecurityException | NumberFormatException e) {
+            // 이미 처리된 예외는 그대로 전달
+            throw e;
+        } catch (Exception e) {
+            log.error("사용자 ID 추출 중 예상치 못한 오류 발생", e);
+            throw new SecurityException("인증 정보 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 } 

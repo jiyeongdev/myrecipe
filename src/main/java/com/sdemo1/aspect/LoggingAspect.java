@@ -50,10 +50,10 @@ public class LoggingAspect {
 
         try {
             // 메서드 시작 로그
-            log.info("🔄 [{}] {}.{}() 시작 - 파라미터: {}", 
-                    Thread.currentThread().getName(), 
-                    className, 
-                    methodName, 
+            log.info("[{}] {}.{}() 시작 - 파라미터: {}",
+                    Thread.currentThread().getName(),
+                    className,
+                    methodName,
                     formatArgs(args));
 
             stopWatch.start();
@@ -61,10 +61,10 @@ public class LoggingAspect {
             stopWatch.stop();
 
             // 메서드 완료 로그
-            log.info("✅ [{}] {}.{}() 완료 - 실행시간: {}ms", 
-                    Thread.currentThread().getName(), 
-                    className, 
-                    methodName, 
+            log.info("[{}] {}.{}() 완료 - 실행시간: {}ms",
+                    Thread.currentThread().getName(),
+                    className,
+                    methodName,
                     stopWatch.getTotalTimeMillis());
 
             return result;
@@ -73,11 +73,11 @@ public class LoggingAspect {
             stopWatch.stop();
             
             // 예외 발생 로그
-            log.error("❌ [{}] {}.{}() 실패 - 실행시간: {}ms, 예외: {}", 
-                    Thread.currentThread().getName(), 
-                    className, 
-                    methodName, 
-                    stopWatch.getTotalTimeMillis(), 
+            log.error("[{}] {}.{}() 실패 - 실행시간: {}ms, 예외: {}",
+                    Thread.currentThread().getName(),
+                    className,
+                    methodName,
+                    stopWatch.getTotalTimeMillis(),
                     e.getMessage());
             
             throw e;
@@ -93,16 +93,16 @@ public class LoggingAspect {
         String methodName = joinPoint.getSignature().getName();
         
         try {
-            log.info("🌐 [API] {}.{}() 호출", className, methodName);
+            log.info("[API] {}.{}() 호출", className, methodName);
             
             Object result = joinPoint.proceed();
             
-            log.info("✅ [API] {}.{}() 응답 완료", className, methodName);
+            log.info("[API] {}.{}() 응답 완료", className, methodName);
             
             return result;
             
         } catch (Exception e) {
-            log.error("❌ [API] {}.{}() 오류 발생: {}", className, methodName, e.getMessage());
+            log.error("[API] {}.{}() 오류 발생: {}", className, methodName, e.getMessage());
             throw e;
         }
     }
@@ -117,7 +117,7 @@ public class LoggingAspect {
         String threadName = Thread.currentThread().getName();
         
         try {
-            log.info("🚀 [ASYNC-{}] {}.{}() 비동기 작업 시작", 
+            log.info("[ASYNC-{}] {}.{}() 비동기 작업 시작",
                     threadName, className, methodName);
             
             StopWatch stopWatch = new StopWatch();
@@ -126,13 +126,13 @@ public class LoggingAspect {
             Object result = joinPoint.proceed();
             
             stopWatch.stop();
-            log.info("✨ [ASYNC-{}] {}.{}() 비동기 작업 완료 - 실행시간: {}ms", 
+            log.info("[ASYNC-{}] {}.{}() 비동기 작업 완료 - 실행시간: {}ms",
                     threadName, className, methodName, stopWatch.getTotalTimeMillis());
             
             return result;
             
         } catch (Exception e) {
-            log.error("💥 [ASYNC-{}] {}.{}() 비동기 작업 실패: {}", 
+            log.error("[ASYNC-{}] {}.{}() 비동기 작업 실패: {}",
                     threadName, className, methodName, e.getMessage());
             throw e;
         }
@@ -147,7 +147,7 @@ public class LoggingAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
         
-        log.info("💾 [TXN] {}.{}() 트랜잭션 성공적으로 커밋", className, methodName);
+        log.info("[TXN] {}.{}() 트랜잭션 성공적으로 커밋", className, methodName);
     }
 
     /**
@@ -159,7 +159,7 @@ public class LoggingAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String methodName = joinPoint.getSignature().getName();
         
-        log.error("🔄 [TXN] {}.{}() 트랜잭션 롤백 - 예외: {}", 
+        log.error("[TXN] {}.{}() 트랜잭션 롤백 - 예외: {}",
                 className, methodName, exception.getMessage());
     }
 

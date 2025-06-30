@@ -14,6 +14,8 @@ import com.sdemo1.entity.RecipeStep;
 import com.sdemo1.repository.RecipeStepRepository;
 import org.springframework.transaction.annotation.Transactional;
 import com.sdemo1.util.DefaultFieldHandler;
+import com.sdemo1.dto.PageRequestDto;
+import java.util.Objects;
 
 @Service
 public class CookRecipeService {
@@ -74,7 +76,7 @@ public class CookRecipeService {
                 .userId(item.getUserId())
                 .cookTitle(item.getCookTitle())
                 .cookImg(item.getCookImg())
-                .Ingredients(processedIngredients)
+                .ingredients(processedIngredients)
                 .recipeSteps(recipeSteps)
                 .build();
         } catch (JsonProcessingException e) {
@@ -103,7 +105,7 @@ public class CookRecipeService {
     }
     
     @Transactional
-    public void updateRecipe(int cookId, CookRecipeRequest request) throws Exception {
+    public void updateRecipe(Integer cookId, CookRecipeRequest request) throws Exception {
         // CookItem 업데이트
         CookItem existingCookItem = cookItemRepository.findById(cookId)
             .orElseThrow(() -> new IllegalArgumentException("해당하는 레시피가 없습니다."));
@@ -150,7 +152,7 @@ public class CookRecipeService {
      * @throws IllegalArgumentException 레시피가 존재하지 않는 경우
      */
     @Transactional
-    public void deleteRecipe(int cookId) {
+    public void deleteRecipe(Integer cookId) {
         // CookItem 존재 여부 확인
         CookItem existingCookItem = cookItemRepository.findById(cookId)
             .orElseThrow(() -> new IllegalArgumentException("해당하는 레시피가 없습니다."));
@@ -161,5 +163,37 @@ public class CookRecipeService {
         
         // CookItem 삭제
         cookItemRepository.delete(existingCookItem);
+    }
+
+    /**
+     * 전체 레시피 조회 (SNS 피드용)
+     * 내 레시피 제외하고 최신순으로 조회 (페이징 지원)
+     */
+    public List<CookRecipeResponse> getAllRecipesExceptMine(Integer excludeUserId, PageRequestDto pageRequest) {
+        List<CookItem> allCookItems = cookItemRepository.findAll()
+                .stream()
+                .filter(item -> excludeUserId == null || !Objects.equals(item.getUserId(), excludeUserId))
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .collect(Collectors.toList());
+        
+        // 페이징 적용
+        int startIndex = (pageRequest.getPage() - 1) * pageRequest.getSize();
+        int endIndex = Math.min(startIndex + pageRequest.getSize(), allCookItems.size());
+        
+        List<CookItem> pagedCookItems = allCookItems.subList(startIndex, endIndex);
+        
+        return pagedCookItems.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
+    }
+    
+    /**
+     * 특정 레시피들만 조회 (추천에서 사용)
+     */
+    public List<CookRecipeResponse> getRecipesByIds(List<Integer> cookIds) {
+        List<CookItem> cookItems = cookItemRepository.findByCookIdIn(cookIds);
+        return cookItems.stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 }
