@@ -32,10 +32,7 @@ import java.util.Optional;
 public class GoogleAuthServiceImpl extends AbstractSocialAuthService {
 
     private final RestTemplate restTemplate;
-    private final MemberRepository memberRepository;
-    private final MemberSocialAccountRepository memberSocialAccountRepository;
     private final JwtTokenProvider jwtTokenProvider;
-    private final JwtTokenUtil jwtTokenUtil;
     private final MemberService memberService;
     private final MemberSocialAccountService memberSocialAccountService;
 

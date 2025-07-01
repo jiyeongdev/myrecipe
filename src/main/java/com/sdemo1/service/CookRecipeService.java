@@ -14,7 +14,6 @@ import com.sdemo1.entity.RecipeStep;
 import com.sdemo1.repository.RecipeStepRepository;
 import org.springframework.transaction.annotation.Transactional;
 import com.sdemo1.util.DefaultFieldHandler;
-import com.sdemo1.dto.PageRequestDto;
 import java.util.Objects;
 
 @Service
@@ -167,22 +166,17 @@ public class CookRecipeService {
 
     /**
      * 전체 레시피 조회 (SNS 피드용)
-     * 내 레시피 제외하고 최신순으로 조회 (페이징 지원)
+     * 내 레시피 제외하고 최신순으로 조회
      */
-    public List<CookRecipeResponse> getAllRecipesExceptMine(Integer excludeUserId, PageRequestDto pageRequest) {
-        List<CookItem> allCookItems = cookItemRepository.findAll()
+    public List<CookRecipeResponse> getAllRecipesExceptMine(Integer excludeUserId, Integer limit) {
+        List<CookItem> cookItems = cookItemRepository.findAll()
                 .stream()
                 .filter(item -> excludeUserId == null || !Objects.equals(item.getUserId(), excludeUserId))
                 .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                .limit(limit)
                 .collect(Collectors.toList());
         
-        // 페이징 적용
-        int startIndex = (pageRequest.getPage() - 1) * pageRequest.getSize();
-        int endIndex = Math.min(startIndex + pageRequest.getSize(), allCookItems.size());
-        
-        List<CookItem> pagedCookItems = allCookItems.subList(startIndex, endIndex);
-        
-        return pagedCookItems.stream()
+        return cookItems.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }

@@ -477,7 +477,7 @@ public class RecipeRecommendationService {
         try {
             // 최신 인기 레시피 10개 조회 (예: 최근 생성된 레시피)
             PageRequestDto pageRequest = new PageRequestDto(1, 10);
-            List<CookRecipeResponse> popularRecipes = cookRecipeService.getAllRecipesExceptMine(memberId, pageRequest);
+            List<CookRecipeResponse> popularRecipes = cookRecipeService.getAllRecipesExceptMine(memberId, pageRequest.getSize());
             
             return popularRecipes.stream()
                     .map(recipe -> EnrichedRecommendation.fromCookRecipeResponse(

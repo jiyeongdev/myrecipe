@@ -2,8 +2,6 @@ package com.sdemo1.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +18,6 @@ import com.sdemo1.common.response.ApiResponse;
 import com.sdemo1.dto.EnrichedRecommendation;
 import com.sdemo1.request.CookRecipeRequest;
 import com.sdemo1.response.CookRecipeResponse;
-import com.sdemo1.response.SNSFeedResponse;
 import com.sdemo1.security.CustomUserDetails;
 import com.sdemo1.service.CookRecipeService;
 import com.sdemo1.service.RecipeRecommendationService;
@@ -47,24 +44,6 @@ public class CookRecipeController {
             return ResponseEntity.ok(cookId);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/{userId}")
-    public ApiResponse<List<CookRecipeResponse>> getRecipesByUserId(@PathVariable("userId") Integer userId) {
-        try {
-            List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByUserId(userId);
-            return new ApiResponse<>(
-                null,
-                recipes,
-                HttpStatus.OK
-            );
-        } catch (Exception e) {
-            return new ApiResponse<>(
-                e.getMessage(),
-                null,
-                HttpStatus.BAD_REQUEST
-            );
         }
     }
 
@@ -191,7 +170,7 @@ public class CookRecipeController {
             
             // 전체 레시피 조회 (내 레시피 제외, 페이징 적용)
             List<CookRecipeResponse> allRecipes = 
-                    cookRecipeService.getAllRecipesExceptMine(memberId, pageRequest);
+                    cookRecipeService.getAllRecipesExceptMine(memberId, pageRequest.getSize());
             
             return new ApiResponse<>(
                     null,
@@ -205,6 +184,24 @@ public class CookRecipeController {
                     "전체 피드를 불러오는 중 오류가 발생했습니다: " + e.getMessage(),
                     new ArrayList<>(),
                     HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    @GetMapping("/{userId}")
+    public ApiResponse<List<CookRecipeResponse>> getRecipesByUserId(@PathVariable("userId") Integer userId) {
+        try {
+            List<CookRecipeResponse> recipes = cookRecipeService.getRecipesByUserId(userId);
+            return new ApiResponse<>(
+                null,
+                recipes,
+                HttpStatus.OK
+            );
+        } catch (Exception e) {
+            return new ApiResponse<>(
+                e.getMessage(),
+                null,
+                HttpStatus.BAD_REQUEST
             );
         }
     }

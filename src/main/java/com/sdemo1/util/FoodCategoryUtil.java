@@ -53,7 +53,4 @@ public class FoodCategoryUtil {
                 ));
     }
 
-    public static void clearCache() {
-        categoryMap = null;
-    }
 } 
