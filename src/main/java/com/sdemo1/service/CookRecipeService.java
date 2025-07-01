@@ -45,44 +45,7 @@ public class CookRecipeService {
             .collect(Collectors.toList());
     }
     
-    /**
-     * CookItem을 CookRecipeResponse로 변환
-     */
-    private CookRecipeResponse convertToResponse(CookItem item) {
-        try {
-            RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
-                .orElse(null);
-            
-            // cookIngredient 파싱 및 필드 누락 처리
-            List<CookRecipeRequest.Ingredient> ingredients = objectMapper.readValue(
-                item.getIngredients(),
-                objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.Ingredient.class)
-            );
-            List<CookRecipeRequest.Ingredient> processedIngredients = defaultFieldHandler.setDefaultIngredientFields(ingredients);
-            
-            // recipeSteps 파싱 및 필드 누락 처리
-            List<CookRecipeRequest.RecipeStepDetail> recipeSteps = null;
-            if (recipeStep != null) {
-                recipeSteps = objectMapper.readValue(
-                    recipeStep.getRecipeSteps(),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.RecipeStepDetail.class)
-                );
-                recipeSteps = defaultFieldHandler.setDefaultRecipeStepFields(recipeSteps);
-            }
-            
-            return CookRecipeResponse.builder()
-                .cookId(item.getCookId())
-                .userId(item.getUserId())
-                .cookTitle(item.getCookTitle())
-                .cookImg(item.getCookImg())
-                .ingredients(processedIngredients)
-                .recipeSteps(recipeSteps)
-                .build();
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("JSON 파싱 중 오류 발생", e);
-        }
-    }
-
+ 
     @Transactional
     public Integer createRecipe(CookRecipeRequest request) throws Exception {
         CookItem cookItem = CookItem.builder()
@@ -169,17 +132,15 @@ public class CookRecipeService {
      * 내 레시피 제외하고 최신순으로 조회
      */
     public List<CookRecipeResponse> getAllRecipesExceptMine(Integer excludeUserId, Integer limit) {
-        List<CookItem> cookItems = cookItemRepository.findAll()
-                .stream()
-                .filter(item -> excludeUserId == null || !Objects.equals(item.getUserId(), excludeUserId))
-                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
-                .limit(limit)
-                .collect(Collectors.toList());
+        List<Object[]> results = cookItemRepository.findAllWithUserNameExceptMine(excludeUserId);
         
-        return cookItems.stream()
-                .map(this::convertToResponse)
+        return results.stream()
+                .limit(limit)
+                .map(this::convertToResponseWithUserName)
                 .collect(Collectors.toList());
     }
+
+
     
     /**
      * 특정 레시피들만 조회 (추천에서 사용)
@@ -189,5 +150,86 @@ public class CookRecipeService {
         return cookItems.stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
+    }
+
+        
+    /**
+     * JOIN 결과를 CookRecipeResponse로 변환 (userName 포함)
+     */
+    private CookRecipeResponse convertToResponseWithUserName(Object[] result) {
+        try {
+            CookItem item = (CookItem) result[0];
+            String userName = (String) result[1]; // LEFT JOIN으로 인해 null일 수 있음
+            
+            RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
+                .orElse(null);
+            
+            // cookIngredient 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.Ingredient> ingredients = objectMapper.readValue(
+                item.getIngredients(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.Ingredient.class)
+            );
+            List<CookRecipeRequest.Ingredient> processedIngredients = defaultFieldHandler.setDefaultIngredientFields(ingredients);
+            
+            // recipeSteps 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.RecipeStepDetail> recipeSteps = null;
+            if (recipeStep != null) {
+                recipeSteps = objectMapper.readValue(
+                    recipeStep.getRecipeSteps(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.RecipeStepDetail.class)
+                );
+                recipeSteps = defaultFieldHandler.setDefaultRecipeStepFields(recipeSteps);
+            }
+            
+            return CookRecipeResponse.builder()
+                .cookId(item.getCookId())
+                .userId(item.getUserId())
+                .userName(userName != null ? userName : "알수없음")
+                .cookTitle(item.getCookTitle())
+                .cookImg(item.getCookImg())
+                .ingredients(processedIngredients)
+                .recipeSteps(recipeSteps)
+                .build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 파싱 중 오류 발생", e);
+        }
+    }
+    
+       /**
+     * CookItem을 CookRecipeResponse로 변환
+     */
+    private CookRecipeResponse convertToResponse(CookItem item) {
+        try {
+            RecipeStep recipeStep = recipeStepRepository.findByCookId(item.getCookId())
+                .orElse(null);
+            
+            // cookIngredient 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.Ingredient> ingredients = objectMapper.readValue(
+                item.getIngredients(),
+                objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.Ingredient.class)
+            );
+            List<CookRecipeRequest.Ingredient> processedIngredients = defaultFieldHandler.setDefaultIngredientFields(ingredients);
+            
+            // recipeSteps 파싱 및 필드 누락 처리
+            List<CookRecipeRequest.RecipeStepDetail> recipeSteps = null;
+            if (recipeStep != null) {
+                recipeSteps = objectMapper.readValue(
+                    recipeStep.getRecipeSteps(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, CookRecipeRequest.RecipeStepDetail.class)
+                );
+                recipeSteps = defaultFieldHandler.setDefaultRecipeStepFields(recipeSteps);
+            }
+            
+            return CookRecipeResponse.builder()
+                .cookId(item.getCookId())
+                .userId(item.getUserId())
+                .cookTitle(item.getCookTitle())
+                .cookImg(item.getCookImg())
+                .ingredients(processedIngredients)
+                .recipeSteps(recipeSteps)
+                .build();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("JSON 파싱 중 오류 발생", e);
+        }
     }
 }

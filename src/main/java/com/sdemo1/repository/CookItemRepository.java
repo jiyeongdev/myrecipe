@@ -100,4 +100,10 @@ public interface CookItemRepository extends JpaRepository<CookItem, Integer> {
         @Param("minMatchCount") int minMatchCount,
         @Param("limitCount") int limitCount
     );
+
+    /**
+     * userName을 포함한 전체 레시피 조회 (SNS 피드용)
+     */
+    @Query("SELECT c, m.name as userName FROM CookItem c LEFT JOIN Member m ON c.userId = m.memberId WHERE (:excludeUserId IS NULL OR c.userId != :excludeUserId) ORDER BY c.createdAt DESC")
+    List<Object[]> findAllWithUserNameExceptMine(@Param("excludeUserId") Integer excludeUserId);
 }
